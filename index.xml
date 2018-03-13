@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes" ?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
-    <title>yingfeng.chen blog</title>
+    <title>Listen Wind</title>
     <link>https://qietingfengling.github.io/</link>
-    <description>Recent content on yingfeng.chen blog</description>
+    <description>Recent content on Listen Wind</description>
     <generator>Hugo -- gohugo.io</generator>
     <managingEditor>1181308789@qq.com (yingfeng.chen)</managingEditor>
     <webMaster>1181308789@qq.com (yingfeng.chen)</webMaster>
@@ -13,12 +13,21 @@
     
     
     <item>
-      <title>Test</title>
-      <link>https://qietingfengling.github.io/post/test/</link>
+      <title>golang中rate包源码解读</title>
+      <link>https://qietingfengling.github.io/post/go_rate/</link>
       <pubDate>Tue, 27 Feb 2018 20:24:57 +0800</pubDate>
       <author>1181308789@qq.com (yingfeng.chen)</author>
-      <guid>https://qietingfengling.github.io/post/test/</guid>
-      <description> first code fmt.Println(&amp;#34;Hello World&amp;#34;)</description>
+      <guid>https://qietingfengling.github.io/post/go_rate/</guid>
+      <description>背景 最近公司需要对Nginx新版本进行压测，包括http/1.0,http/1.1和http/2.0不同协议版本间的性能对比，也包括各种秘要套件的性能对比。 目前支持http/2.0协议和各种秘要套件的开源压测软件较少，而且性能也比较难压上去。 于是想到用go自研性能压测软件，其中需要用到golang中的golang.org/x/time/rate,对其实现方式特别感兴趣，于是对其源码进行了剖析。
+简介 限制器（Limiter）主要用于控制事件发生的频率。它实现了一个大小为b的&amp;rdquo;令牌桶&amp;rdquo;，最初已满并以每秒r个令牌来填充令牌桶。 也就是说，在任何足够长的时间间隔内，限制器（Limiter）将限制每秒只能获取r个令牌，最大突发大小为b个事件。 特殊情况下，如果r==Inf(无限速率｀math.MaxFloat64｀)，则b被忽略。
+限制器有三个主要方法：AllowN,ReserveN 和WaitN。三个方法的不同之处在于没有令牌的时候分别表现如下：
+1、如果没有令牌可用，WaitN将返回false。
+2、如果没有令牌可用，ReserveN将返回未来令牌的预留量以及调用者在使用之前必须等待的时间量
+3、如果没有令牌可用，AllowN则等待阻塞，直到可以获得或者其关联的context被取消。
+关于令牌桶思想可以查看以下网址：
+－https://en.wikipedia.org/wiki/Token_bucket
+简单使用 wait/waitN限制每秒发生一个事件 package main import ( &amp;#34;fmt&amp;#34; &amp;#34;context&amp;#34; &amp;#34;time&amp;#34; &amp;#34;golang.org/x/time/rate&amp;#34; ) func main() { r := 1 b := 10 l := rate.NewLimiter(rate.Limit(r), b) c, _ := context.WithCancel(context.TODO()) for { l.Wait(c) //or l.WaitN(c, 1) 	fmt.Println(time.Now().Format(&amp;#34;2006-01-02 15:04:05&amp;#34;)) } } WaitN阻塞直到lim允许n个事件发生。如果n超过限制器的突发大小，Context被取消或者预期的等待时间超过Context的deadline，则返回错误。
+allow/allowN限制每秒发生一个事件 package main import ( &amp;#34;fmt&amp;#34; &amp;#34;time&amp;#34; &amp;#34;golang.org/x/time/rate&amp;#34; ) func main() { r := 1 b := 10 l := rate.</description>
     </item>
     
     <item>
@@ -27,9 +36,8 @@
       <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
       <author>1181308789@qq.com (yingfeng.chen)</author>
       <guid>https://qietingfengling.github.io/page/about/</guid>
-      <description>My name is Inigo Montoya. I have the following qualities:
- I rock a great mustache I&amp;rsquo;m extremely loyal to my family  What else do you need?
-my history To be honest, I&amp;rsquo;m having some trouble remembering right now, so why don&amp;rsquo;t you just watch my movie and it will answer all your questions.</description>
+      <description>My name is yingfeng.chen.
+ github https://github.com/qietingfengling  </description>
     </item>
     
   </channel>

@@ -15,11 +15,11 @@
   <meta name="twitter:card" content="summary" />
   <meta property="og:url" content="https://qietingfengling.github.io/post/" />
   <meta property="og:type" content="website" />
-  <meta property="og:site_name" content="yingfeng.chen blog" />
+  <meta property="og:site_name" content="Listen Wind" />
 
   <meta name="generator" content="Hugo 0.36.1" />
   <link rel="canonical" href="https://qietingfengling.github.io/post/" />
-  <link rel="alternate" href="https://qietingfengling.github.io/post/index.xml" type="application/rss+xml" title="yingfeng.chen blog">
+  <link rel="alternate" href="https://qietingfengling.github.io/post/index.xml" type="application/rss+xml" title="Listen Wind">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.7.1/katex.min.css" integrity="sha384-wITovz90syo1dJWVh32uuETPVEtGigN07tkttEqPv+uR2SE/mbQcG7ATL28aI9H0" crossorigin="anonymous">
   <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" integrity="sha384-wvfXpqpZZVQGK6TAh5PVlGOfQNHSoD2xbE+QkPxCAFlNEevoEH3Sl0sibVcOQVnN" crossorigin="anonymous">
   <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
@@ -97,7 +97,7 @@ ga('send', 'pageview');
         <span class="icon-bar"></span>
         <span class="icon-bar"></span>
       </button>
-      <a class="navbar-brand" href="https://qietingfengling.github.io">yingfeng.chen blog</a>
+      <a class="navbar-brand" href="https://qietingfengling.github.io">Listen Wind</a>
     </div>
 
     <div class="collapse navbar-collapse" id="main-navbar">
@@ -114,11 +114,7 @@ ga('send', 'pageview');
               <a class="navlinks-parent" href="javascript:void(0)">Samples</a>
               <div class="navlinks-children">
                 
-                  <a href="/post/2017-03-07-bigimg-sample">Big Image Sample</a>
-                
-                  <a href="/post/2017-03-05-math-sample">Math Sample</a>
-                
-                  <a href="/post/2016-03-08-code-sample">Code Sample</a>
+                  <a href="/post/go_rate">golang rate code analysis</a>
                 
               </div>
             </li>
@@ -146,8 +142,8 @@ ga('send', 'pageview');
     <div class="avatar-container">
       <div class="avatar-img-border">
         
-          <a title="yingfeng.chen blog" href="https://qietingfengling.github.io">
-            <img class="avatar-img" src="https://qietingfengling.github.io/img/avatar-icon.png" alt="yingfeng.chen blog" />
+          <a title="Listen Wind" href="https://qietingfengling.github.io">
+            <img class="avatar-img" src="https://qietingfengling.github.io/img/avatar-icon.png" alt="Listen Wind" />
           </a>
         
       </div>
@@ -183,8 +179,8 @@ ga('send', 'pageview');
         <div class="posts-list">
           
             <article class="post-preview">
-              <a href="https://qietingfengling.github.io/post/test/">
-                <h2 class="post-title">Test</h2>
+              <a href="https://qietingfengling.github.io/post/go_rate/">
+                <h2 class="post-title">golang中rate包源码解读</h2>
 
                 
               </a>
@@ -194,10 +190,17 @@ ga('send', 'pageview');
               </p>
               <div class="post-entry">
                 
-                  
-
-<h3 id="first-code">first code</h3>
-<div class="highlight"><pre class="chroma"><code class="language-go" data-lang="go"><span class="nx">fmt</span><span class="p">.</span><span class="nx">Println</span><span class="p">(</span><span class="s">&#34;Hello World&#34;</span><span class="p">)</span></code></pre></div>
+                  背景 最近公司需要对Nginx新版本进行压测，包括http/1.0,http/1.1和http/2.0不同协议版本间的性能对比，也包括各种秘要套件的性能对比。 目前支持http/2.0协议和各种秘要套件的开源压测软件较少，而且性能也比较难压上去。 于是想到用go自研性能压测软件，其中需要用到golang中的golang.org/x/time/rate,对其实现方式特别感兴趣，于是对其源码进行了剖析。
+简介 限制器（Limiter）主要用于控制事件发生的频率。它实现了一个大小为b的&rdquo;令牌桶&rdquo;，最初已满并以每秒r个令牌来填充令牌桶。 也就是说，在任何足够长的时间间隔内，限制器（Limiter）将限制每秒只能获取r个令牌，最大突发大小为b个事件。 特殊情况下，如果r==Inf(无限速率｀math.MaxFloat64｀)，则b被忽略。
+限制器有三个主要方法：AllowN,ReserveN 和WaitN。三个方法的不同之处在于没有令牌的时候分别表现如下：
+1、如果没有令牌可用，WaitN将返回false。
+2、如果没有令牌可用，ReserveN将返回未来令牌的预留量以及调用者在使用之前必须等待的时间量
+3、如果没有令牌可用，AllowN则等待阻塞，直到可以获得或者其关联的context被取消。
+关于令牌桶思想可以查看以下网址：
+－https://en.wikipedia.org/wiki/Token_bucket
+简单使用 wait/waitN限制每秒发生一个事件 package main import ( &#34;fmt&#34; &#34;context&#34; &#34;time&#34; &#34;golang.org/x/time/rate&#34; ) func main() { r := 1 b := 10 l := rate.NewLimiter(rate.Limit(r), b) c, _ := context.WithCancel(context.TODO()) for { l.Wait(c) //or l.WaitN(c, 1) 	fmt.Println(time.Now().Format(&#34;2006-01-02 15:04:05&#34;)) } } WaitN阻塞直到lim允许n个事件发生。如果n超过限制器的突发大小，Context被取消或者预期的等待时间超过Context的deadline，则返回错误。
+allow/allowN限制每秒发生一个事件 package main import ( &#34;fmt&#34; &#34;time&#34; &#34;golang.org/x/time/rate&#34; ) func main() { r := 1 b := 10 l := rate.
+                  <a href="https://qietingfengling.github.io/post/go_rate/" class="post-read-more">[Read More]</a>
                 
               </div>
 
@@ -264,7 +267,7 @@ ga('send', 'pageview');
 
           
             &nbsp;&bull;&nbsp;
-            <a href="https://qietingfengling.github.io">yingfeng.chen blog</a>
+            <a href="https://qietingfengling.github.io">Listen Wind</a>
           
         </p>
         

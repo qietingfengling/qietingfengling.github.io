@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+
+  <title>golang中rate包源码解读</title>
+  <meta property="og:title" content="golang中rate包源码解读" />
+  <meta name="twitter:title" content="golang中rate包源码解读" />
+  <meta name="description" content="背景 最近公司需要对Nginx新版本进行压测，包括http/1.0,http/1.1和http/2.0不同协议版本间的性能对比，也包括各种秘要套件的性能对比。 目前支持http/2.0协议和各种秘要套件的开源压测软件较少，而且性能也比较难压上去。 于是想到用go自研性能压测软件，其中需要用到golang中的golang.org/x/time/rate,对其实现方式特别感兴趣，于是对其源码进行了剖析。
+简介 限制器（Limiter）主要用于控制事件发生的频率。它实现了一个大小为b的&rdquo;令牌桶&rdquo;，最初已满并以每秒r个令牌来填充令牌桶。 也就是说，在任何足够长的时间间隔内，限制器（Limiter）将限制每秒只能获取r个令牌，最大突发大小为b个事件。 特殊情况下，如果r==Inf(无限速率｀math.MaxFloat64｀)，则b被忽略。
+限制器有三个主要方法：AllowN,ReserveN 和WaitN。三个方法的不同之处在于没有令牌的时候分别表现如下：
+1、如果没有令牌可用，WaitN将返回false。
+2、如果没有令牌可用，ReserveN将返回未来令牌的预留量以及调用者在使用之前必须等待的时间量
+3、如果没有令牌可用，AllowN则等待阻塞，直到可以获得或者其关联的context被取消。
+关于令牌桶思想可以查看以下网址：
+－https://en.wikipedia.org/wiki/Token_bucket
+简单使用 wait/waitN限制每秒发生一个事件 package main import ( &#34;fmt&#34; &#34;context&#34; &#34;time&#34; &#34;golang.org/x/time/rate&#34; ) func main() { r := 1 b := 10 l := rate.NewLimiter(rate.Limit(r), b) c, _ := context.WithCancel(context.TODO()) for { l.Wait(c) //or l.WaitN(c, 1) 	fmt.Println(time.Now().Format(&#34;2006-01-02 15:04:05&#34;)) } } WaitN阻塞直到lim允许n个事件发生。如果n超过限制器的突发大小，Context被取消或者预期的等待时间超过Context的deadline，则返回错误。
+allow/allowN限制每秒发生一个事件 package main import ( &#34;fmt&#34; &#34;time&#34; &#34;golang.org/x/time/rate&#34; ) func main() { r := 1 b := 10 l := rate.">
+  <meta property="og:description" content="背景 最近公司需要对Nginx新版本进行压测，包括http/1.0,http/1.1和http/2.0不同协议版本间的性能对比，也包括各种秘要套件的性能对比。 目前支持http/2.0协议和各种秘要套件的开源压测软件较少，而且性能也比较难压上去。 于是想到用go自研性能压测软件，其中需要用到golang中的golang.org/x/time/rate,对其实现方式特别感兴趣，于是对其源码进行了剖析。
+简介 限制器（Limiter）主要用于控制事件发生的频率。它实现了一个大小为b的&rdquo;令牌桶&rdquo;，最初已满并以每秒r个令牌来填充令牌桶。 也就是说，在任何足够长的时间间隔内，限制器（Limiter）将限制每秒只能获取r个令牌，最大突发大小为b个事件。 特殊情况下，如果r==Inf(无限速率｀math.MaxFloat64｀)，则b被忽略。
+限制器有三个主要方法：AllowN,ReserveN 和WaitN。三个方法的不同之处在于没有令牌的时候分别表现如下：
+1、如果没有令牌可用，WaitN将返回false。
+2、如果没有令牌可用，ReserveN将返回未来令牌的预留量以及调用者在使用之前必须等待的时间量
+3、如果没有令牌可用，AllowN则等待阻塞，直到可以获得或者其关联的context被取消。
+关于令牌桶思想可以查看以下网址：
+－https://en.wikipedia.org/wiki/Token_bucket
+简单使用 wait/waitN限制每秒发生一个事件 package main import ( &#34;fmt&#34; &#34;context&#34; &#34;time&#34; &#34;golang.org/x/time/rate&#34; ) func main() { r := 1 b := 10 l := rate.NewLimiter(rate.Limit(r), b) c, _ := context.WithCancel(context.TODO()) for { l.Wait(c) //or l.WaitN(c, 1) 	fmt.Println(time.Now().Format(&#34;2006-01-02 15:04:05&#34;)) } } WaitN阻塞直到lim允许n个事件发生。如果n超过限制器的突发大小，Context被取消或者预期的等待时间超过Context的deadline，则返回错误。
+allow/allowN限制每秒发生一个事件 package main import ( &#34;fmt&#34; &#34;time&#34; &#34;golang.org/x/time/rate&#34; ) func main() { r := 1 b := 10 l := rate.">
+  <meta name="twitter:description" content="背景 最近公司需要对Nginx新版本进行压测，包括http/1.0,http/1.1和http/2.0不同协议版本间的性能对比，也包括各种秘要套件的性能对比。 目前支持http/2.0协议和各种秘要套件的开源压测软件较少，而且性能也比较难压上去。 于是想到用go自研性能压测软件，其中需要用到golang中的golang.org/x/time/rate,对其实现方式特别感兴趣，于是对其源码进行了剖 …">
+  <meta name="author" content="yingfeng.chen"/>
+  <link href='https://qietingfengling.github.io/img/favicon.ico' rel='icon' type='image/x-icon'/>
+  <meta property="og:image" content="https://qietingfengling.github.io/img/avatar-icon.png" />
+  <meta name="twitter:image" content="https://qietingfengling.github.io/img/avatar-icon.png" />
+  <meta name="twitter:card" content="summary" />
+  <meta property="og:url" content="https://qietingfengling.github.io/post/go_rate/" />
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="Listen Wind" />
+
+  <meta name="generator" content="Hugo 0.36.1" />
+  <link rel="canonical" href="https://qietingfengling.github.io/post/go_rate/" />
+  <link rel="alternate" href="https://qietingfengling.github.io/index.xml" type="application/rss+xml" title="Listen Wind">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.7.1/katex.min.css" integrity="sha384-wITovz90syo1dJWVh32uuETPVEtGigN07tkttEqPv+uR2SE/mbQcG7ATL28aI9H0" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" integrity="sha384-wvfXpqpZZVQGK6TAh5PVlGOfQNHSoD2xbE+QkPxCAFlNEevoEH3Sl0sibVcOQVnN" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://qietingfengling.github.io/css/main.css" /><link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lora:400,700,400italic,700italic" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,700italic,800italic,400,300,600,700,800" /><link rel="stylesheet" href="https://qietingfengling.github.io/css/syntax.css" /><link rel="stylesheet" href="https://qietingfengling.github.io/css/codeblock.css" />
+
+
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/photoswipe/4.1.2/photoswipe.min.css" integrity="sha384-h/L2W9KefUClHWaty3SLE5F/qvc4djlyR4qY3NUV5HGQBBW7stbcfff1+I/vmsHh" crossorigin="anonymous">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/photoswipe/4.1.2/default-skin/default-skin.min.css" integrity="sha384-iD0dNku6PYSIQLyfTOpB06F2KCZJAKLOThS5HRe8b3ibhdEQ6eKsFf/EeFxdOt5R" crossorigin="anonymous">
+
+
+
+<div class="pswp" tabindex="-1" role="dialog" aria-hidden="true">
+
+<div class="pswp__bg"></div>
+
+<div class="pswp__scroll-wrap">
+    
+    <div class="pswp__container">
+      <div class="pswp__item"></div>
+      <div class="pswp__item"></div>
+      <div class="pswp__item"></div>
+    </div>
+    
+    <div class="pswp__ui pswp__ui--hidden">
+    <div class="pswp__top-bar">
+      
+      <div class="pswp__counter"></div>
+      <button class="pswp__button pswp__button--close" title="Close (Esc)"></button>
+      <button class="pswp__button pswp__button--share" title="Share"></button>
+      <button class="pswp__button pswp__button--fs" title="Toggle fullscreen"></button>
+      <button class="pswp__button pswp__button--zoom" title="Zoom in/out"></button>
+      
+      
+      <div class="pswp__preloader">
+        <div class="pswp__preloader__icn">
+          <div class="pswp__preloader__cut">
+            <div class="pswp__preloader__donut"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="pswp__share-modal pswp__share-modal--hidden pswp__single-tap">
+      <div class="pswp__share-tooltip"></div>
+    </div>
+    <button class="pswp__button pswp__button--arrow--left" title="Previous (arrow left)">
+    </button>
+    <button class="pswp__button pswp__button--arrow--right" title="Next (arrow right)">
+    </button>
+    <div class="pswp__caption">
+      <div class="pswp__caption__center"></div>
+    </div>
+    </div>
+    </div>
+</div>
+
+<script>
+window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
+ga('create', 'UA-114876224-1', 'auto');
+ga('send', 'pageview');
+</script>
+<script async src='//www.google-analytics.com/analytics.js'></script>
+
+</head>
+
+  <body>
+    <nav class="navbar navbar-default navbar-fixed-top navbar-custom">
+  <div class="container-fluid">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#main-navbar">
+        <span class="sr-only">Toggle navigation</span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="https://qietingfengling.github.io">Listen Wind</a>
+    </div>
+
+    <div class="collapse navbar-collapse" id="main-navbar">
+      <ul class="nav navbar-nav navbar-right">
+        
+          
+            <li>
+              <a title="Blog" href="/">Blog</a>
+            </li>
+          
+        
+          
+            <li class="navlinks-container">
+              <a class="navlinks-parent" href="javascript:void(0)">Samples</a>
+              <div class="navlinks-children">
+                
+                  <a href="/post/go_rate">golang rate code analysis</a>
+                
+              </div>
+            </li>
+          
+        
+          
+            <li>
+              <a title="About" href="/page/about/">About</a>
+            </li>
+          
+        
+          
+            <li>
+              <a title="Tags" href="/tags">Tags</a>
+            </li>
+          
+        
+
+        
+
+        
+      </ul>
+    </div>
+
+    <div class="avatar-container">
+      <div class="avatar-img-border">
+        
+          <a title="Listen Wind" href="https://qietingfengling.github.io">
+            <img class="avatar-img" src="https://qietingfengling.github.io/img/avatar-icon.png" alt="Listen Wind" />
+          </a>
+        
+      </div>
+    </div>
+
+  </div>
+</nav>
+
+
+
+
+    
+  
+  
+  
+
+
+
+
+  
+
+  <header class="header-section ">
+    
+    <div class="intro-header no-img">
+      
+      <div class="container">
+        <div class="row">
+          <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+            <div class="post-heading">
+              <h1>golang中rate包源码解读</h1>
+                
+                
+                  <span class="post-meta">
+  
+  
+  <i class="fa fa-calendar-o"></i>&nbsp;Posted on February 27, 2018
+  
+  
+  
+</span>
+
+
+                
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+
+    
+<div class="container" role="main">
+  <div class="row">
+    <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+      <article role="main" class="blog-post">
+        
+
+<h1 id="背景">背景</h1>
+
+<p>最近公司需要对Nginx新版本进行压测，包括http/1.0,http/1.1和http/2.0不同协议版本间的性能对比，也包括各种秘要套件的性能对比。
+目前支持http/2.0协议和各种秘要套件的开源压测软件较少，而且性能也比较难压上去。
+于是想到用go自研性能压测软件，其中需要用到golang中的<code>golang.org/x/time/rate</code>,对其实现方式特别感兴趣，于是对其源码进行了剖析。</p>
+
+<h1 id="简介">简介</h1>
+
+<p>限制器（Limiter）主要用于控制事件发生的频率。它实现了一个大小为b的&rdquo;令牌桶&rdquo;，最初已满并以每秒r个令牌来填充令牌桶。
+也就是说，在任何足够长的时间间隔内，限制器（Limiter）将限制每秒只能获取r个令牌，最大突发大小为b个事件。
+特殊情况下，如果r==Inf(无限速率｀math.MaxFloat64｀)，则b被忽略。</p>
+
+<p>限制器有三个主要方法：<code>AllowN</code>,<code>ReserveN</code> 和<code>WaitN</code>。三个方法的不同之处在于没有令牌的时候分别表现如下：</p>
+
+<p>1、如果没有令牌可用，<code>WaitN</code>将返回false。</p>
+
+<p>2、如果没有令牌可用，<code>ReserveN</code>将返回未来令牌的预留量以及调用者在使用之前必须等待的时间量</p>
+
+<p>3、如果没有令牌可用，<code>AllowN</code>则等待阻塞，直到可以获得或者其关联的context被取消。</p>
+
+<p>关于令牌桶思想可以查看以下网址：</p>
+
+<p>－<a href="https://en.wikipedia.org/wiki/Token_bucket">https://en.wikipedia.org/wiki/Token_bucket</a></p>
+
+<h1 id="简单使用">简单使用</h1>
+
+<h2 id="wait-waitn限制每秒发生一个事件">wait/waitN限制每秒发生一个事件</h2>
+<div class="highlight"><pre class="chroma"><code class="language-go" data-lang="go"><span class="kn">package</span> <span class="nx">main</span>
+
+<span class="kn">import</span> <span class="p">(</span>
+	<span class="s">&#34;fmt&#34;</span>
+	<span class="s">&#34;context&#34;</span>
+	<span class="s">&#34;time&#34;</span>
+	<span class="s">&#34;golang.org/x/time/rate&#34;</span>
+<span class="p">)</span>
+
+<span class="kd">func</span> <span class="nx">main</span><span class="p">()</span> <span class="p">{</span>
+	<span class="nx">r</span> <span class="o">:=</span> <span class="mi">1</span>
+	<span class="nx">b</span> <span class="o">:=</span> <span class="mi">10</span>
+	<span class="nx">l</span> <span class="o">:=</span> <span class="nx">rate</span><span class="p">.</span><span class="nx">NewLimiter</span><span class="p">(</span><span class="nx">rate</span><span class="p">.</span><span class="nx">Limit</span><span class="p">(</span><span class="nx">r</span><span class="p">),</span> <span class="nx">b</span><span class="p">)</span>
+	<span class="nx">c</span><span class="p">,</span> <span class="nx">_</span> <span class="o">:=</span> <span class="nx">context</span><span class="p">.</span><span class="nx">WithCancel</span><span class="p">(</span><span class="nx">context</span><span class="p">.</span><span class="nx">TODO</span><span class="p">())</span>
+	<span class="k">for</span> <span class="p">{</span>
+		<span class="nx">l</span><span class="p">.</span><span class="nx">Wait</span><span class="p">(</span><span class="nx">c</span><span class="p">)</span> <span class="c1">//or l.WaitN(c, 1)
+</span><span class="c1"></span>		<span class="nx">fmt</span><span class="p">.</span><span class="nx">Println</span><span class="p">(</span><span class="nx">time</span><span class="p">.</span><span class="nx">Now</span><span class="p">().</span><span class="nx">Format</span><span class="p">(</span><span class="s">&#34;2006-01-02 15:04:05&#34;</span><span class="p">))</span>
+	<span class="p">}</span>
+<span class="p">}</span></code></pre></div>
+<p><code>WaitN</code>阻塞直到lim允许n个事件发生。如果n超过限制器的突发大小，Context被取消或者预期的等待时间超过Context的deadline，则返回错误。</p>
+
+<h2 id="allow-allown限制每秒发生一个事件">allow/allowN限制每秒发生一个事件</h2>
+<div class="highlight"><pre class="chroma"><code class="language-go" data-lang="go"><span class="kn">package</span> <span class="nx">main</span>
+
+<span class="kn">import</span> <span class="p">(</span>
+	<span class="s">&#34;fmt&#34;</span>
+	<span class="s">&#34;time&#34;</span>
+	<span class="s">&#34;golang.org/x/time/rate&#34;</span>
+<span class="p">)</span>
+
+<span class="kd">func</span> <span class="nx">main</span><span class="p">()</span> <span class="p">{</span>
+	<span class="nx">r</span> <span class="o">:=</span> <span class="mi">1</span>
+	<span class="nx">b</span> <span class="o">:=</span> <span class="mi">10</span>
+	<span class="nx">l</span> <span class="o">:=</span> <span class="nx">rate</span><span class="p">.</span><span class="nx">NewLimiter</span><span class="p">(</span><span class="nx">rate</span><span class="p">.</span><span class="nx">Limit</span><span class="p">(</span><span class="nx">r</span><span class="p">),</span> <span class="nx">b</span><span class="p">)</span>
+	<span class="k">for</span> <span class="p">{</span>
+		<span class="k">if</span> <span class="nx">l</span><span class="p">.</span><span class="nx">Allow</span><span class="p">()</span> <span class="p">{</span> <span class="c1">// or l.AllowN(time.Now(), 1) 
+</span><span class="c1"></span>			<span class="nx">fmt</span><span class="p">.</span><span class="nx">Println</span><span class="p">(</span><span class="nx">time</span><span class="p">.</span><span class="nx">Now</span><span class="p">().</span><span class="nx">Format</span><span class="p">(</span><span class="s">&#34;2006-01-02 15:04:05&#34;</span><span class="p">))</span>
+		<span class="p">}</span>
+	<span class="p">}</span>
+<span class="p">}</span></code></pre></div>
+<p><code>AllowN</code>报告是否有n个事件可能发生。如果您打算删除或者跳过超过速率限制的事件，就使用这个方法。否则使用<code>Reserve</code>或<code>Wait</code></p>
+
+<h2 id="reserve-reserven限制每秒发生一个事件">Reserve/ReserveN限制每秒发生一个事件</h2>
+<div class="highlight"><pre class="chroma"><code class="language-go" data-lang="go"><span class="kn">package</span> <span class="nx">main</span>
+
+<span class="kn">import</span> <span class="p">(</span>
+	<span class="s">&#34;fmt&#34;</span>
+	<span class="s">&#34;time&#34;</span>
+	<span class="s">&#34;golang.org/x/time/rate&#34;</span>
+<span class="p">)</span>
+
+<span class="kd">func</span> <span class="nx">main</span><span class="p">()</span> <span class="p">{</span>
+	<span class="nx">r</span> <span class="o">:=</span> <span class="mi">1</span>
+	<span class="nx">b</span> <span class="o">:=</span> <span class="mi">10</span>
+	<span class="nx">l</span> <span class="o">:=</span> <span class="nx">rate</span><span class="p">.</span><span class="nx">NewLimiter</span><span class="p">(</span><span class="nx">rate</span><span class="p">.</span><span class="nx">Limit</span><span class="p">(</span><span class="nx">r</span><span class="p">),</span> <span class="nx">b</span><span class="p">)</span>
+	<span class="k">for</span> <span class="p">{</span>
+		<span class="nx">rv</span> <span class="o">:=</span> <span class="nx">l</span><span class="p">.</span><span class="nx">Reserve</span><span class="p">()</span> <span class="c1">// or ReserveN(time.Now(), 1)
+</span><span class="c1"></span>		<span class="k">if</span> <span class="p">!</span><span class="nx">rv</span><span class="p">.</span><span class="nx">OK</span><span class="p">()</span> <span class="p">{</span>
+			<span class="k">return</span>
+		<span class="p">}</span>
+		<span class="nx">time</span><span class="p">.</span><span class="nx">Sleep</span><span class="p">(</span><span class="nx">rv</span><span class="p">.</span><span class="nx">Delay</span><span class="p">())</span>
+		<span class="nx">fmt</span><span class="p">.</span><span class="nx">Println</span><span class="p">(</span><span class="nx">time</span><span class="p">.</span><span class="nx">Now</span><span class="p">().</span><span class="nx">Format</span><span class="p">(</span><span class="s">&#34;2006-01-02 15:04:05&#34;</span><span class="p">))</span>
+	<span class="p">}</span>
+<span class="p">}</span></code></pre></div>
+<p><code>ReserveN</code>返回一个Reservation对象，表示在n个事件发生之前呼叫者必须等待多久。
+限制器在允许将来的事件时考虑此预留。如果n超过限制器的突发大小，则<code>ReserveN</code>返回false。
+如果您希望根据速率限制等待并放慢速度而不丢弃事件，则使用此方法。
+如果您想用context的deadline或者取消延迟，请改为使用<code>wait</code>。要放弃或跳过超出速率限制的事件，请使用<code>allow</code>。</p>
+
+<h1 id="源码剖析">源码剖析</h1>
+
+<h2 id="两个类型">两个类型</h2>
+<div class="highlight"><pre class="chroma"><code class="language-go" data-lang="go"><span class="c1">// Limit 定了事件的最大频率，表示为每秒事件的数据量，0表示无限制
+</span><span class="c1"></span><span class="kd">type</span> <span class="nx">Limit</span> <span class="kt">float64</span>
+
+<span class="c1">// Inf 是无限的速率限制；它允许所有事件（即使突发为0）
+</span><span class="c1"></span><span class="kd">const</span> <span class="nx">Inf</span> <span class="p">=</span> <span class="nx">Limit</span><span class="p">(</span><span class="nx">math</span><span class="p">.</span><span class="nx">MaxFloat64</span><span class="p">)</span>
+
+<span class="c1">//Reservation中ok为false时，作为Delay的返回
+</span><span class="c1"></span><span class="kd">const</span> <span class="nx">InfDuration</span> <span class="p">=</span> <span class="nx">time</span><span class="p">.</span><span class="nx">Duration</span><span class="p">(</span><span class="mi">1</span><span class="o">&lt;&lt;</span><span class="mi">63</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span></code></pre></div>
+<h2 id="两个主要结构体">两个主要结构体</h2>
+<div class="highlight"><pre class="chroma"><code class="language-go" data-lang="go"><span class="kd">type</span> <span class="nx">Limiter</span> <span class="kd">struct</span> <span class="p">{</span>
+	<span class="nx">limit</span> <span class="nx">Limit</span>   <span class="c1">//限制器，每秒可以往令牌桶中放入的令牌数量
+</span><span class="c1"></span>	<span class="nx">burst</span> <span class="kt">int</span>     <span class="c1">//令牌桶中令牌总数，既最大允许并发事件数
+</span><span class="c1"></span>	<span class="nx">mu</span>     <span class="nx">sync</span><span class="p">.</span><span class="nx">Mutex</span>  <span class="c1">//限制器锁，属于线程安全
+</span><span class="c1"></span>	<span class="nx">tokens</span> <span class="kt">float64</span>    <span class="c1">// 每秒可以从令牌桶中取出令牌的数量
+</span><span class="c1"></span>	<span class="nx">last</span> <span class="nx">time</span><span class="p">.</span><span class="nx">Time</span>  <span class="c1">//tokens更新时的最后时间
+</span><span class="c1"></span>	<span class="nx">lastEvent</span> <span class="nx">time</span><span class="p">.</span><span class="nx">Time</span>  <span class="c1">//限速时间的最新时间（过去或者未来）
+</span><span class="c1"></span><span class="p">}</span></code></pre></div><div class="highlight"><pre class="chroma"><code class="language-go" data-lang="go"><span class="c1">//Reservation保存有关Limiter延迟后发生的事件信息。可以被取消，被取消时Limiter可以允许其他事件执行
+</span><span class="c1"></span><span class="kd">type</span> <span class="nx">Reservation</span> <span class="kd">struct</span> <span class="p">{</span>
+	<span class="nx">ok</span>        <span class="kt">bool</span>  <span class="c1">//是否允许事件发生
+</span><span class="c1"></span>	<span class="nx">lim</span>       <span class="o">*</span><span class="nx">Limiter</span> <span class="c1">//限制器的相关信息
+</span><span class="c1"></span>	<span class="nx">tokens</span>    <span class="kt">int</span>  <span class="c1">// 每秒可以从令牌桶中取出令牌的数量
+</span><span class="c1"></span>	<span class="nx">timeToAct</span> <span class="nx">time</span><span class="p">.</span><span class="nx">Time</span>  <span class="c1">// 事件允许访问的时间点
+</span><span class="c1"></span>	<span class="nx">limit</span> <span class="nx">Limit</span>  <span class="c1">//reservation时候限制的时间数量
+</span><span class="c1"></span><span class="p">}</span></code></pre></div>
+<h2 id="三个基本函数">三个基本函数</h2>
+
+<h3 id="durationfromtokens"><code>durationFromTokens</code></h3>
+
+<p>单位转化函数，将tokens数量转化成需要花费的时间</p>
+
+<h3 id="tokensfromduration"><code>tokensFromDuration</code></h3>
+
+<p>单位转化函数，将时间间隔转化为可以消费的tokens数量</p>
+
+<h3 id="advance"><code>advance</code></h3>
+
+<p>其核心思路是通过这一次运行时间now和上一时刻时间last的时间间隔，
+通过单位转化函数tokensFromDuration计算出这个时间间隔里可以消耗多少个tokens，
+再加上限制器中原有缺失的tokens数，即可计算出时间间隔里新令牌池还有多少令牌数</p>
+<div class="highlight"><pre class="chroma"><code class="language-go" data-lang="go">	<span class="c1">// 计算由于时间流逝而产生的新令牌数量。
+</span><span class="c1"></span>	<span class="nx">delta</span> <span class="o">:=</span> <span class="nx">lim</span><span class="p">.</span><span class="nx">limit</span><span class="p">.</span><span class="nx">tokensFromDuration</span><span class="p">(</span><span class="nx">elapsed</span><span class="p">)</span>
+	<span class="nx">tokens</span> <span class="o">:=</span> <span class="nx">lim</span><span class="p">.</span><span class="nx">tokens</span> <span class="o">+</span> <span class="nx">delta</span></code></pre></div>
+<h2 id="三个主要方法">三个主要方法</h2>
+
+<p><code>reserveN</code> 、<code>AllowN</code> 和<code>waitN</code> 这三个主要方法的简单使用已经在文章开头介绍过了，这里就不在累赘了。
+这里主要剖析其是如何实现的。<code>reserveN</code>是三个方法的基础，其他包括<code>reserve</code>、<code>Allow</code> 、
+<code>wait</code>、<code>AllowN</code> 和<code>waitN</code>都调用<code>reserveN</code>并用其所计算出的数据。下面先介绍<code>reserveN</code>方法。
+###<code>reserveN</code>
+通过令牌池中的令牌数减去每秒可以消费的令牌数，
+再通过单位转化函数<code>durationFromTokens</code>转化出还需要等待多久才能有令牌可以消费，最后通过<code>now.Add(waitDuration)</code>
+计算出timeToAct，表示事件需要阻塞到这个时间点才可以继续执行。</p>
+<div class="highlight"><pre class="chroma"><code class="language-go" data-lang="go">	<span class="nx">now</span><span class="p">,</span> <span class="nx">last</span><span class="p">,</span> <span class="nx">tokens</span> <span class="o">:=</span> <span class="nx">lim</span><span class="p">.</span><span class="nx">advance</span><span class="p">(</span><span class="nx">now</span><span class="p">)</span>
+
+	<span class="c1">// 计算请求产生的令牌的剩余数量。
+</span><span class="c1"></span>	<span class="nx">tokens</span> <span class="o">-=</span> <span class="nb">float64</span><span class="p">(</span><span class="nx">n</span><span class="p">)</span>
+
+	<span class="c1">// 计算等待时间。
+</span><span class="c1"></span>	<span class="kd">var</span> <span class="nx">waitDuration</span> <span class="nx">time</span><span class="p">.</span><span class="nx">Duration</span>
+	<span class="k">if</span> <span class="nx">tokens</span> <span class="p">&lt;</span> <span class="mi">0</span> <span class="p">{</span>
+		<span class="nx">waitDuration</span> <span class="p">=</span> <span class="nx">lim</span><span class="p">.</span><span class="nx">limit</span><span class="p">.</span><span class="nx">durationFromTokens</span><span class="p">(</span><span class="o">-</span><span class="nx">tokens</span><span class="p">)</span>
+	<span class="p">}</span>
+
+	<span class="c1">// 计算结果，注意，这个ok很重要，allow和wait都是通过ok来进行判断是否允许运用或是否阻塞
+</span><span class="c1"></span>	<span class="nx">ok</span> <span class="o">:=</span> <span class="nx">n</span> <span class="o">&lt;=</span> <span class="nx">lim</span><span class="p">.</span><span class="nx">burst</span> <span class="o">&amp;&amp;</span> <span class="nx">waitDuration</span> <span class="o">&lt;=</span> <span class="nx">maxFutureReserve</span>
+
+	<span class="nx">r</span> <span class="o">:=</span> <span class="nx">Reservation</span><span class="p">{</span>
+		<span class="nx">ok</span><span class="p">:</span>    <span class="nx">ok</span><span class="p">,</span>
+		<span class="nx">lim</span><span class="p">:</span>   <span class="nx">lim</span><span class="p">,</span>
+		<span class="nx">limit</span><span class="p">:</span> <span class="nx">lim</span><span class="p">.</span><span class="nx">limit</span><span class="p">,</span>
+	<span class="p">}</span>
+	<span class="k">if</span> <span class="nx">ok</span> <span class="p">{</span>
+		<span class="nx">r</span><span class="p">.</span><span class="nx">tokens</span> <span class="p">=</span> <span class="nx">n</span>
+		<span class="nx">r</span><span class="p">.</span><span class="nx">timeToAct</span> <span class="p">=</span> <span class="nx">now</span><span class="p">.</span><span class="nx">Add</span><span class="p">(</span><span class="nx">waitDuration</span><span class="p">)</span>
+	<span class="p">}</span></code></pre></div>
+<p>可以看到上面调用<code>reserveN</code>的例子，例子中通过调用<code>Delay</code>在决策需要sleep多久。
+<code>Delay</code>底层是调用<code>DelayFrom</code>，<code>DelayFrom</code>就是将上面计算所得的timeToAct和now做sub计算，计算出需要休眠多少秒。源码如下：</p>
+<div class="highlight"><pre class="chroma"><code class="language-go" data-lang="go"><span class="kd">func</span> <span class="p">(</span><span class="nx">r</span> <span class="o">*</span><span class="nx">Reservation</span><span class="p">)</span> <span class="nx">Delay</span><span class="p">()</span> <span class="nx">time</span><span class="p">.</span><span class="nx">Duration</span> <span class="p">{</span>
+	<span class="k">return</span> <span class="nx">r</span><span class="p">.</span><span class="nx">DelayFrom</span><span class="p">(</span><span class="nx">time</span><span class="p">.</span><span class="nx">Now</span><span class="p">())</span>
+<span class="p">}</span>
+
+<span class="kd">func</span> <span class="p">(</span><span class="nx">r</span> <span class="o">*</span><span class="nx">Reservation</span><span class="p">)</span> <span class="nx">DelayFrom</span><span class="p">(</span><span class="nx">now</span> <span class="nx">time</span><span class="p">.</span><span class="nx">Time</span><span class="p">)</span> <span class="nx">time</span><span class="p">.</span><span class="nx">Duration</span> <span class="p">{</span>
+	<span class="k">if</span> <span class="p">!</span><span class="nx">r</span><span class="p">.</span><span class="nx">ok</span> <span class="p">{</span>
+		<span class="k">return</span> <span class="nx">InfDuration</span>
+	<span class="p">}</span>
+	<span class="nx">delay</span> <span class="o">:=</span> <span class="nx">r</span><span class="p">.</span><span class="nx">timeToAct</span><span class="p">.</span><span class="nx">Sub</span><span class="p">(</span><span class="nx">now</span><span class="p">)</span>
+	<span class="k">if</span> <span class="nx">delay</span> <span class="p">&lt;</span> <span class="mi">0</span> <span class="p">{</span>
+		<span class="k">return</span> <span class="mi">0</span>
+	<span class="p">}</span>
+	<span class="k">return</span> <span class="nx">delay</span>
+<span class="p">}</span></code></pre></div>
+<p>###<code>AllowN</code></p>
+
+<p><code>AllowN</code>完全使用<code>reserveN</code>方法，不过其返回的是是否可以执行的标志，即<code>reserveN</code>中计算产生的ok。
+所以说<code>AllowN</code>在事件超出频率的时候会丢弃或跳过。</p>
+<div class="highlight"><pre class="chroma"><code class="language-go" data-lang="go"><span class="kd">func</span> <span class="p">(</span><span class="nx">lim</span> <span class="o">*</span><span class="nx">Limiter</span><span class="p">)</span> <span class="nx">AllowN</span><span class="p">(</span><span class="nx">now</span> <span class="nx">time</span><span class="p">.</span><span class="nx">Time</span><span class="p">,</span> <span class="nx">n</span> <span class="kt">int</span><span class="p">)</span> <span class="kt">bool</span> <span class="p">{</span>
+	<span class="k">return</span> <span class="nx">lim</span><span class="p">.</span><span class="nx">reserveN</span><span class="p">(</span><span class="nx">now</span><span class="p">,</span> <span class="nx">n</span><span class="p">,</span> <span class="mi">0</span><span class="p">).</span><span class="nx">ok</span>
+<span class="p">}</span></code></pre></div>
+<p>###<code>waitN</code></p>
+
+<p><code>waitN</code>底层也是调用<code>reserveN</code>方法，其特殊之处是使用select语法和DelayFrom方法，计算出需要阻塞的时间间隔</p>
+<div class="highlight"><pre class="chroma"><code class="language-go" data-lang="go">	<span class="nx">r</span> <span class="o">:=</span> <span class="nx">lim</span><span class="p">.</span><span class="nx">reserveN</span><span class="p">(</span><span class="nx">now</span><span class="p">,</span> <span class="nx">n</span><span class="p">,</span> <span class="nx">waitLimit</span><span class="p">)</span>
+	<span class="k">if</span> <span class="p">!</span><span class="nx">r</span><span class="p">.</span><span class="nx">ok</span> <span class="p">{</span>
+		<span class="k">return</span> <span class="nx">fmt</span><span class="p">.</span><span class="nx">Errorf</span><span class="p">(</span><span class="s">&#34;rate: Wait(n=%d) would exceed context deadline&#34;</span><span class="p">,</span> <span class="nx">n</span><span class="p">)</span>
+	<span class="p">}</span>
+	<span class="nx">t</span> <span class="o">:=</span> <span class="nx">time</span><span class="p">.</span><span class="nx">NewTimer</span><span class="p">(</span><span class="nx">r</span><span class="p">.</span><span class="nx">DelayFrom</span><span class="p">(</span><span class="nx">now</span><span class="p">))</span>
+	<span class="k">defer</span> <span class="nx">t</span><span class="p">.</span><span class="nx">Stop</span><span class="p">()</span>
+	<span class="k">select</span> <span class="p">{</span>
+	<span class="k">case</span> <span class="o">&lt;-</span><span class="nx">t</span><span class="p">.</span><span class="nx">C</span><span class="p">:</span>
+		<span class="k">return</span> <span class="kc">nil</span>
+	<span class="k">case</span> <span class="o">&lt;-</span><span class="nx">ctx</span><span class="p">.</span><span class="nx">Done</span><span class="p">():</span>
+		<span class="nx">r</span><span class="p">.</span><span class="nx">Cancel</span><span class="p">()</span>
+		<span class="k">return</span> <span class="nx">ctx</span><span class="p">.</span><span class="nx">Err</span><span class="p">()</span>
+	<span class="p">}</span></code></pre></div>
+<h1 id="其他用法">其他用法</h1>
+
+<h2 id="如何自定义时间限速">如何自定义时间限速</h2>
+
+<p>通过<code>golang.org/x/time/rate</code>自己提供的<code>rate.Every</code>方法。以下代码实现1分钟的限速：</p>
+<div class="highlight"><pre class="chroma"><code class="language-go" data-lang="go"><span class="kn">package</span> <span class="nx">main</span>
+
+<span class="kn">import</span> <span class="p">(</span>
+	<span class="s">&#34;fmt&#34;</span>
+	<span class="s">&#34;time&#34;</span>
+	<span class="s">&#34;context&#34;</span>
+	<span class="s">&#34;golang.org/x/time/rate&#34;</span>
+<span class="p">)</span>
+
+<span class="kd">func</span> <span class="nx">main</span><span class="p">()</span> <span class="p">{</span>
+	<span class="nx">b</span> <span class="o">:=</span> <span class="mi">10</span>
+	<span class="nx">l</span> <span class="o">:=</span> <span class="nx">rate</span><span class="p">.</span><span class="nx">NewLimiter</span><span class="p">(</span><span class="nx">rate</span><span class="p">.</span><span class="nx">Every</span><span class="p">(</span><span class="mi">60</span><span class="o">*</span><span class="nx">time</span><span class="p">.</span><span class="nx">Second</span><span class="p">),</span> <span class="nx">b</span><span class="p">)</span>
+	<span class="nx">c</span><span class="p">,</span> <span class="nx">_</span> <span class="o">:=</span> <span class="nx">context</span><span class="p">.</span><span class="nx">WithCancel</span><span class="p">(</span><span class="nx">context</span><span class="p">.</span><span class="nx">TODO</span><span class="p">())</span>
+	<span class="k">for</span> <span class="p">{</span>
+		<span class="nx">l</span><span class="p">.</span><span class="nx">WaitN</span><span class="p">(</span><span class="nx">c</span><span class="p">,</span><span class="mi">1</span><span class="p">)</span> <span class="c1">//or l.WaitN(c, 1)
+</span><span class="c1"></span>		<span class="nx">fmt</span><span class="p">.</span><span class="nx">Println</span><span class="p">(</span><span class="nx">time</span><span class="p">.</span><span class="nx">Now</span><span class="p">().</span><span class="nx">Format</span><span class="p">(</span><span class="s">&#34;2006-01-02 15:04:05&#34;</span><span class="p">))</span>
+	<span class="p">}</span>
+<span class="p">}</span></code></pre></div>
+<h1 id="使用场景">使用场景</h1>
+
+<p>使用rate做压测工具
+<a href="https://github.com/qietingfengling/Q-wind">https://github.com/qietingfengling/Q-wind</a></p>
+
+      </article>
+
+      
+        <ul class="pager blog-pager">
+          
+          
+        </ul>
+      
+
+
+      
+        
+        
+      
+
+    </div>
+  </div>
+</div>
+
+    <footer>
+  <div class="container">
+    <div class="row">
+      <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+        <ul class="list-inline text-center footer-links">
+          
+              <li>
+                <a href="mailto:1181308789@qq.com" title="Email me">
+                  <span class="fa-stack fa-lg">
+                    <i class="fa fa-circle fa-stack-2x"></i>
+                    <i class="fa fa-envelope fa-stack-1x fa-inverse"></i>
+                  </span>
+                </a>
+              </li>
+              <li>
+                <a href="https://github.com/qietingfengling" title="GitHub">
+                  <span class="fa-stack fa-lg">
+                    <i class="fa fa-circle fa-stack-2x"></i>
+                    <i class="fa fa-github fa-stack-1x fa-inverse"></i>
+                  </span>
+                </a>
+              </li>
+          
+          <li>
+            
+            <a href="https://qietingfengling.github.io/index.xml" title="RSS">
+            
+              <span class="fa-stack fa-lg">
+                <i class="fa fa-circle fa-stack-2x"></i>
+                <i class="fa fa-rss fa-stack-1x fa-inverse"></i>
+              </span>
+            </a>
+          </li>
+          
+        </ul>
+        <p class="credits copyright text-muted">
+          
+            
+              <a href="yourwebsite.com">yingfeng.chen</a>
+            
+          
+
+          &nbsp;&bull;&nbsp;
+          2018
+
+          
+            &nbsp;&bull;&nbsp;
+            <a href="https://qietingfengling.github.io">Listen Wind</a>
+          
+        </p>
+        
+        <p class="credits theme-by text-muted">
+          <a href="http://gohugo.io">Hugo v0.36.1</a> powered &nbsp;&bull;&nbsp; Theme by <a href="http://deanattali.com/beautiful-jekyll/">Beautiful Jekyll</a> adapted to <a href="https://github.com/qietingfengling/beautifulhugo">Beautiful Hugo</a>
+          
+        </p>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.7.1/katex.min.js" integrity="sha384-/y1Nn9+QQAipbNQWU65krzJralCnuOasHncUFXGkdwntGeSvQicrYkiUBwsgUqc1" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.7.1/contrib/auto-render.min.js" integrity="sha384-dq1/gEHSxPZQ7DdrM82ID4YVol9BYyU7GbWlIwnwyPzotpoc57wDw/guX8EaYGPx" crossorigin="anonymous"></script>
+<script src="https://code.jquery.com/jquery-1.12.4.min.js" integrity="sha256-ZosEbRLbNQzLpnKIkEdrPv7lOy9C27hHQ+Xp8a4MxAQ=" crossorigin="anonymous"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+<script src="https://qietingfengling.github.io/js/main.js"></script><script> renderMathInElement(document.body); </script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/photoswipe/4.1.2/photoswipe.min.js" integrity="sha384-QELNnmcmU8IR9ZAykt67vGr9/rZJdHbiWi64V88fCPaOohUlHCqUD/unNN0BXSqy" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/photoswipe/4.1.2/photoswipe-ui-default.min.js" integrity="sha384-m67o7SkQ1ALzKZIFh4CiTA8tmadaujiTa9Vu+nqPSwDOqHrDmxLezTdFln8077+q" crossorigin="anonymous"></script>
+<script src="https://qietingfengling.github.io/js/load-photoswipe.js"></script>
+
+
+
+
+
+
+  </body>
+</html>
+
