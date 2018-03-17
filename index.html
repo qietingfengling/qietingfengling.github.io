@@ -206,8 +206,45 @@ ga('send', 'pageview');
           
           
             <article class="post-preview">
+              <a href="https://qietingfengling.github.io/post/go_context/">
+                <h2 class="post-title">Golang中context包源码剖析</h2>
+                
+                
+              </a>
+
+              <span class="post-meta">
+  
+  
+  <i class="fa fa-calendar-o"></i>&nbsp;Posted on March 16, 2018
+  
+  
+  
+</span>
+
+
+              <div class="post-entry">
+                
+                  背景 工作中Golang项目大量使用Context包，但是对其底层实现和具体用法都一知半解，最近抽时间对其源码包进行研读，形成blog分享下。
+简介 在Go项目中，大量使用goroutine，比如项目中使用context做全局goroutine的终止， 比如官方http包使用context传递请求和上下文数据，比如官方rate包用context包管理wait阻塞终止。 如何做到有效地管理所产生的goroutine的停止和数据传输呢？方法有很多种，例如使用channel的方式，这里不做细化。 本文主要讨论context包的使用和实现原理。
+更多实例和解释请查看https://blog.golang.org/context
+主要方法的简单使用 WithCancel() 主动终止所有goroutine
+package main import ( &#34;context&#34; &#34;time&#34; &#34;fmt&#34; ) func doWork(ctx context.Context, name string) { for { select { case &lt;-ctx.Done(): fmt.Printf(&#34;%v is off duty now.\n&#34;, name) return default: fmt.Printf(&#34;%v working...\n&#34;, name) time.Sleep(2 * time.Second) } } } func main() { //cpuNum := runtime.NumCPU() 	//runtime.GOMAXPROCS(cpuNum) 	boss := context.Background() worker, cancel := context.WithCancel(boss) go doWork(worker, &#34;[ Work A ]&#34;) go doWork(worker, &#34;[ Work B ]&#34;) go doWork(worker, &#34;[ Work C ]&#34;) time.
+                  <a href="https://qietingfengling.github.io/post/go_context/" class="post-read-more">[Read More]</a>
+                
+              </div>
+
+              
+                <span class="post-meta">
+                
+                  #<a href="https://qietingfengling.github.io/tags/go/">go</a>&nbsp;
+                
+                </span>
+              
+            </article>
+          
+            <article class="post-preview">
               <a href="https://qietingfengling.github.io/post/go_rate/">
-                <h2 class="post-title">golang中rate包源码解读</h2>
+                <h2 class="post-title">Golang中rate包源码剖析</h2>
                 
                 
               </a>
@@ -226,10 +263,10 @@ ga('send', 'pageview');
                 
                   背景 最近公司需要对Nginx新版本进行压测，包括http/1.0,http/1.1和http/2.0不同协议版本间的性能对比，也包括各种秘要套件的性能对比。 目前支持http/2.0协议和各种秘要套件的开源压测软件较少，而且性能也比较难压上去。 于是想到用go自研性能压测软件，其中需要用到golang中的golang.org/x/time/rate,对其实现方式特别感兴趣，于是对其源码进行了剖析。
 简介 限制器（Limiter）主要用于控制事件发生的频率。它实现了一个大小为b的&rdquo;令牌桶&rdquo;，最初已满并以每秒r个令牌来填充令牌桶。 也就是说，在任何足够长的时间间隔内，限制器（Limiter）将限制每秒只能获取r个令牌，最大突发大小为b个事件。 特殊情况下，如果r==Inf(无限速率｀math.MaxFloat64｀)，则b被忽略。
-限制器有三个主要方法：AllowN,ReserveN 和WaitN。三个方法的不同之处在于没有令牌的时候分别表现如下：
-1、如果没有令牌可用，WaitN将返回false。
-2、如果没有令牌可用，ReserveN将返回未来令牌的预留量以及调用者在使用之前必须等待的时间量
-3、如果没有令牌可用，AllowN则等待阻塞，直到可以获得或者其关联的context被取消。
+限制器有三个主要方法：AllowN(),ReserveN() 和WaitN()。三个方法的不同之处在于没有令牌的时候分别表现如下：
+1、如果没有令牌可用，WaitN()将返回false。
+2、如果没有令牌可用，ReserveN()将返回未来令牌的预留量以及调用者在使用之前必须等待的时间量
+3、如果没有令牌可用，AllowN()则等待阻塞，直到可以获得或者其关联的context被取消。
 关于令牌桶思想可以查看以下网址：
 －https://en.wikipedia.org/wiki/Token_bucket
 简单使用 wait/waitN限制每秒发生一个事件 package main import ( &#34;fmt&#34; &#34;context&#34; &#34;time&#34; &#34;golang.org/x/time/rate&#34; ) func main() { r := 1 b := 10 l := rate.NewLimiter(rate.Limit(r), b) c, _ := context.WithCancel(context.TODO()) for { l.Wait(c) //or l.WaitN(c, 1) 	fmt.Println(time.Now().Format(&#34;2006-01-02 15:04:05&#34;)) } } WaitN阻塞直到lim允许n个事件发生。如果n超过限制器的突发大小，Context被取消或者预期的等待时间超过Context的deadline，则返回错误。
