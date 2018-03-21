@@ -7,10 +7,31 @@
     <generator>Hugo -- gohugo.io</generator>
     <managingEditor>1181308789@qq.com (yingfeng.chen)</managingEditor>
     <webMaster>1181308789@qq.com (yingfeng.chen)</webMaster>
-    <lastBuildDate>Fri, 16 Mar 2018 08:21:04 +0800</lastBuildDate>
+    <lastBuildDate>Wed, 21 Mar 2018 09:32:45 +0800</lastBuildDate>
     
 	<atom:link href="https://qietingfengling.github.io/post/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>深入理解KMP字符串模式匹配算法</title>
+      <link>https://qietingfengling.github.io/post/algorithm_kmp/</link>
+      <pubDate>Wed, 21 Mar 2018 09:32:45 +0800</pubDate>
+      <author>1181308789@qq.com (yingfeng.chen)</author>
+      <guid>https://qietingfengling.github.io/post/algorithm_kmp/</guid>
+      <description>背景 冲者名字来研究的算法
+使用场景 在一个长字符串中定位一个子字符串的高效算法
+变量定义 S:原字符串；
+subS:待定位子字符串;
+next:移动规则，len(next)==len(subS);
+j:subS的下标;
+k:大于等于1小于j的下标;
+i: S的下标
+逻辑理解 对于子字符串subS，当S匹配到某个位置S[i]和subS[k]不相等的时候， 对于subS，我们需要知道一套规则来指示我们S中的i需要向右移动多少位， subS中的j需要向左移动多少位。
+算法的主要思想是让subS中的j向左移动的位数尽可能少， 当subS[:k+1] == subS[j-1-k:j]时候，subS只需要从k+1位开始匹配。
+公式理解  next[0]=-1,表示任何subS的第一个字符串的移动规则都是-1 next[j]=-1,表示 subS[0]==subS[j]&amp;amp;&amp;amp;(subS[:k+1]!=subS[j-1-k:j] || subS[k]==subS[j]) next[j]=k, 表示 subS[:k+1] == subS[j-1-k:j] &amp;amp;&amp;amp; subS[k+1]!=subS[j] next[j]=0,不满足1、2、3三个条件的其他所有情况。  以上各种规则转化为字符串S的下标i移动位数和子字符串subS的下标j的移动位数分别如下：
+ -1 i加1，既S向后移动1位开始匹配；j恢复到0，既subS从头开始匹配； k i不变，既S从上一次匹配的位置开始匹配；j恢复到k，既subS从第k位开始匹配； 0 i不变，既S从上一次匹配的位置开始匹配；j恢复到0，既subS从头开始匹配；  实例 subS==&amp;quot;ababa&amp;quot;
+   下标 0 1 2 3 4     subS a b a b a   next -1 0 -1 0 -1   满足公式 1 4 2 4 2    subS==&amp;quot;acaaaacabbbb&amp;quot;</description>
+    </item>
     
     <item>
       <title>Golang中context包源码剖析</title>

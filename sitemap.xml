@@ -3,6 +3,11 @@
   xmlns:xhtml="http://www.w3.org/1999/xhtml">
   
   <url>
+    <loc>https://qietingfengling.github.io/post/algorithm_kmp/</loc>
+    <lastmod>2018-03-21T09:32:45+08:00</lastmod>
+  </url>
+  
+  <url>
     <loc>https://qietingfengling.github.io/post/go_context/</loc>
     <lastmod>2018-03-16T08:21:04+08:00</lastmod>
   </url>
@@ -14,11 +19,17 @@
   
   <url>
     <loc>https://qietingfengling.github.io/</loc>
-    <lastmod>2018-03-16T08:21:04+08:00</lastmod>
+    <lastmod>2018-03-21T09:32:45+08:00</lastmod>
   </url>
   
   <url>
     <loc>https://qietingfengling.github.io/page/about/</loc>
+  </url>
+  
+  <url>
+    <loc>https://qietingfengling.github.io/tags/algorithm/</loc>
+    <lastmod>2018-03-21T09:32:45+08:00</lastmod>
+    <priority>0</priority>
   </url>
   
   <url>
@@ -28,7 +39,7 @@
   
   <url>
     <loc>https://qietingfengling.github.io/tags/go/</loc>
-    <lastmod>2018-03-16T08:21:04+08:00</lastmod>
+    <lastmod>2018-03-21T09:32:45+08:00</lastmod>
     <priority>0</priority>
   </url>
   
@@ -39,13 +50,13 @@
   
   <url>
     <loc>https://qietingfengling.github.io/post/</loc>
-    <lastmod>2018-03-16T08:21:04+08:00</lastmod>
+    <lastmod>2018-03-21T09:32:45+08:00</lastmod>
     <priority>0</priority>
   </url>
   
   <url>
     <loc>https://qietingfengling.github.io/tags/</loc>
-    <lastmod>2018-03-16T08:21:04+08:00</lastmod>
+    <lastmod>2018-03-21T09:32:45+08:00</lastmod>
     <priority>0</priority>
   </url>
   

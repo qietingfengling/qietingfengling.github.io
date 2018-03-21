@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+
+  <title>深入理解KMP字符串模式匹配算法</title>
+  <meta property="og:title" content="深入理解KMP字符串模式匹配算法" />
+  <meta name="twitter:title" content="深入理解KMP字符串模式匹配算法" />
+  <meta name="description" content="背景 冲者名字来研究的算法
+使用场景 在一个长字符串中定位一个子字符串的高效算法
+变量定义 S:原字符串；
+subS:待定位子字符串;
+next:移动规则，len(next)==len(subS);
+j:subS的下标;
+k:大于等于1小于j的下标;
+i: S的下标
+逻辑理解 对于子字符串subS，当S匹配到某个位置S[i]和subS[k]不相等的时候， 对于subS，我们需要知道一套规则来指示我们S中的i需要向右移动多少位， subS中的j需要向左移动多少位。
+算法的主要思想是让subS中的j向左移动的位数尽可能少， 当subS[:k&#43;1] == subS[j-1-k:j]时候，subS只需要从k&#43;1位开始匹配。
+公式理解  next[0]=-1,表示任何subS的第一个字符串的移动规则都是-1 next[j]=-1,表示 subS[0]==subS[j]&amp;&amp;(subS[:k&#43;1]!=subS[j-1-k:j] || subS[k]==subS[j]) next[j]=k, 表示 subS[:k&#43;1] == subS[j-1-k:j] &amp;&amp; subS[k&#43;1]!=subS[j] next[j]=0,不满足1、2、3三个条件的其他所有情况。  以上各种规则转化为字符串S的下标i移动位数和子字符串subS的下标j的移动位数分别如下：
+ -1 i加1，既S向后移动1位开始匹配；j恢复到0，既subS从头开始匹配； k i不变，既S从上一次匹配的位置开始匹配；j恢复到k，既subS从第k位开始匹配； 0 i不变，既S从上一次匹配的位置开始匹配；j恢复到0，既subS从头开始匹配；  实例 subS==&quot;ababa&quot;
+   下标 0 1 2 3 4     subS a b a b a   next -1 0 -1 0 -1   满足公式 1 4 2 4 2    subS==&quot;acaaaacabbbb&quot;">
+  <meta property="og:description" content="背景 冲者名字来研究的算法
+使用场景 在一个长字符串中定位一个子字符串的高效算法
+变量定义 S:原字符串；
+subS:待定位子字符串;
+next:移动规则，len(next)==len(subS);
+j:subS的下标;
+k:大于等于1小于j的下标;
+i: S的下标
+逻辑理解 对于子字符串subS，当S匹配到某个位置S[i]和subS[k]不相等的时候， 对于subS，我们需要知道一套规则来指示我们S中的i需要向右移动多少位， subS中的j需要向左移动多少位。
+算法的主要思想是让subS中的j向左移动的位数尽可能少， 当subS[:k&#43;1] == subS[j-1-k:j]时候，subS只需要从k&#43;1位开始匹配。
+公式理解  next[0]=-1,表示任何subS的第一个字符串的移动规则都是-1 next[j]=-1,表示 subS[0]==subS[j]&amp;&amp;(subS[:k&#43;1]!=subS[j-1-k:j] || subS[k]==subS[j]) next[j]=k, 表示 subS[:k&#43;1] == subS[j-1-k:j] &amp;&amp; subS[k&#43;1]!=subS[j] next[j]=0,不满足1、2、3三个条件的其他所有情况。  以上各种规则转化为字符串S的下标i移动位数和子字符串subS的下标j的移动位数分别如下：
+ -1 i加1，既S向后移动1位开始匹配；j恢复到0，既subS从头开始匹配； k i不变，既S从上一次匹配的位置开始匹配；j恢复到k，既subS从第k位开始匹配； 0 i不变，既S从上一次匹配的位置开始匹配；j恢复到0，既subS从头开始匹配；  实例 subS==&quot;ababa&quot;
+   下标 0 1 2 3 4     subS a b a b a   next -1 0 -1 0 -1   满足公式 1 4 2 4 2    subS==&quot;acaaaacabbbb&quot;">
+  <meta name="twitter:description" content="背景 冲者名字来研究的算法
+使用场景 在一个长字符串中定位一个子字符串的高效算法
+变量定义 S:原字符串；
+subS:待定位子字符串;
+next:移动规则，len(next)==len(subS);
+j:subS的下标;
+k:大于等于1小于j的下标;
+i: S的下标
+逻辑理解 对于子字符串subS，当S匹配到某个位置S[i]和subS[k]不相等的时候， 对于subS，我们需要知道一套规则来指示我 …">
+  <meta name="author" content="yingfeng.chen"/>
+  <link href='https://qietingfengling.github.io/img/favicon.ico' rel='icon' type='image/x-icon'/>
+  <meta property="og:image" content="https://qietingfengling.github.io/img/avatar-icon.png" />
+  <meta name="twitter:image" content="https://qietingfengling.github.io/img/avatar-icon.png" />
+  <meta name="twitter:card" content="summary" />
+  <meta property="og:url" content="https://qietingfengling.github.io/post/algorithm_kmp/" />
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="Listen Wind" />
+
+  <meta name="generator" content="Hugo 0.36.1" />
+  <link rel="canonical" href="https://qietingfengling.github.io/post/algorithm_kmp/" />
+  <link rel="alternate" href="https://qietingfengling.github.io/index.xml" type="application/rss+xml" title="Listen Wind">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.7.1/katex.min.css" integrity="sha384-wITovz90syo1dJWVh32uuETPVEtGigN07tkttEqPv+uR2SE/mbQcG7ATL28aI9H0" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" integrity="sha384-wvfXpqpZZVQGK6TAh5PVlGOfQNHSoD2xbE+QkPxCAFlNEevoEH3Sl0sibVcOQVnN" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://qietingfengling.github.io/css/main.css" /><link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lora:400,700,400italic,700italic" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,700italic,800italic,400,300,600,700,800" /><link rel="stylesheet" href="https://qietingfengling.github.io/css/syntax.css" /><link rel="stylesheet" href="https://qietingfengling.github.io/css/codeblock.css" />
+
+
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/photoswipe/4.1.2/photoswipe.min.css" integrity="sha384-h/L2W9KefUClHWaty3SLE5F/qvc4djlyR4qY3NUV5HGQBBW7stbcfff1+I/vmsHh" crossorigin="anonymous">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/photoswipe/4.1.2/default-skin/default-skin.min.css" integrity="sha384-iD0dNku6PYSIQLyfTOpB06F2KCZJAKLOThS5HRe8b3ibhdEQ6eKsFf/EeFxdOt5R" crossorigin="anonymous">
+
+
+
+<div class="pswp" tabindex="-1" role="dialog" aria-hidden="true">
+
+<div class="pswp__bg"></div>
+
+<div class="pswp__scroll-wrap">
+    
+    <div class="pswp__container">
+      <div class="pswp__item"></div>
+      <div class="pswp__item"></div>
+      <div class="pswp__item"></div>
+    </div>
+    
+    <div class="pswp__ui pswp__ui--hidden">
+    <div class="pswp__top-bar">
+      
+      <div class="pswp__counter"></div>
+      <button class="pswp__button pswp__button--close" title="Close (Esc)"></button>
+      <button class="pswp__button pswp__button--share" title="Share"></button>
+      <button class="pswp__button pswp__button--fs" title="Toggle fullscreen"></button>
+      <button class="pswp__button pswp__button--zoom" title="Zoom in/out"></button>
+      
+      
+      <div class="pswp__preloader">
+        <div class="pswp__preloader__icn">
+          <div class="pswp__preloader__cut">
+            <div class="pswp__preloader__donut"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="pswp__share-modal pswp__share-modal--hidden pswp__single-tap">
+      <div class="pswp__share-tooltip"></div>
+    </div>
+    <button class="pswp__button pswp__button--arrow--left" title="Previous (arrow left)">
+    </button>
+    <button class="pswp__button pswp__button--arrow--right" title="Next (arrow right)">
+    </button>
+    <div class="pswp__caption">
+      <div class="pswp__caption__center"></div>
+    </div>
+    </div>
+    </div>
+</div>
+
+<script>
+window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
+ga('create', 'UA-114876224-1', 'auto');
+ga('send', 'pageview');
+</script>
+<script async src='//www.google-analytics.com/analytics.js'></script>
+
+</head>
+
+  <body>
+    <nav class="navbar navbar-default navbar-fixed-top navbar-custom">
+  <div class="container-fluid">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#main-navbar">
+        <span class="sr-only">Toggle navigation</span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="https://qietingfengling.github.io">Listen Wind</a>
+    </div>
+
+    <div class="collapse navbar-collapse" id="main-navbar">
+      <ul class="nav navbar-nav navbar-right">
+        
+          
+            <li>
+              <a title="Blog" href="/">Blog</a>
+            </li>
+          
+        
+          
+            <li class="navlinks-container">
+              <a class="navlinks-parent" href="javascript:void(0)">Samples</a>
+              <div class="navlinks-children">
+                
+                  <a href="/post/go_rate">golang rate code analysis</a>
+                
+              </div>
+            </li>
+          
+        
+          
+            <li>
+              <a title="About" href="/page/about/">About</a>
+            </li>
+          
+        
+          
+            <li>
+              <a title="Tags" href="/tags">Tags</a>
+            </li>
+          
+        
+
+        
+
+        
+      </ul>
+    </div>
+
+    <div class="avatar-container">
+      <div class="avatar-img-border">
+        
+          <a title="Listen Wind" href="https://qietingfengling.github.io">
+            <img class="avatar-img" src="https://qietingfengling.github.io/img/avatar-icon.png" alt="Listen Wind" />
+          </a>
+        
+      </div>
+    </div>
+
+  </div>
+</nav>
+
+
+
+
+    
+  
+  
+  
+
+
+
+
+  
+
+  <header class="header-section ">
+    
+    <div class="intro-header no-img">
+      
+      <div class="container">
+        <div class="row">
+          <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+            <div class="post-heading">
+              <h1>深入理解KMP字符串模式匹配算法</h1>
+                
+                
+                  <span class="post-meta">
+  
+  
+  <i class="fa fa-calendar-o"></i>&nbsp;Posted on March 21, 2018
+  
+  
+  
+</span>
+
+
+                
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+
+    
+<div class="container" role="main">
+  <div class="row">
+    <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+      <article role="main" class="blog-post">
+        
+
+<h1 id="背景">背景</h1>
+
+<p>冲者名字来研究的算法</p>
+
+<h1 id="使用场景">使用场景</h1>
+
+<p>在一个长字符串中定位一个子字符串的高效算法</p>
+
+<h1 id="变量定义">变量定义</h1>
+
+<p>S:原字符串；</p>
+
+<p>subS:待定位子字符串;</p>
+
+<p>next:移动规则，len(next)==len(subS);</p>
+
+<p>j:subS的下标;</p>
+
+<p>k:大于等于1小于j的下标;</p>
+
+<p>i: S的下标</p>
+
+<h1 id="逻辑理解">逻辑理解</h1>
+
+<p>对于子字符串subS，当S匹配到某个位置<code>S[i]</code>和<code>subS[k]</code>不相等的时候，
+对于subS，我们需要知道一套规则来指示我们S中的i需要向右移动多少位，
+subS中的j需要向左移动多少位。</p>
+
+<p>算法的主要思想是让subS中的j向左移动的位数尽可能少，
+当<code>subS[:k+1] == subS[j-1-k:j]</code>时候，subS只需要从k+1位开始匹配。</p>
+
+<h1 id="公式理解">公式理解</h1>
+
+<ol>
+<li><code>next[0]=-1</code>,表示任何subS的第一个字符串的移动规则都是-1</li>
+<li><code>next[j]=-1</code>,表示 <code>subS[0]==subS[j]&amp;&amp;(subS[:k+1]!=subS[j-1-k:j] || subS[k]==subS[j])</code></li>
+<li><code>next[j]=k</code>, 表示 <code>subS[:k+1] == subS[j-1-k:j] &amp;&amp; subS[k+1]!=subS[j]</code></li>
+<li><code>next[j]=0</code>,不满足1、2、3三个条件的其他所有情况。</li>
+</ol>
+
+<p>以上各种规则转化为字符串S的下标i移动位数和子字符串subS的下标j的移动位数分别如下：</p>
+
+<ol>
+<li><code>-1</code> i加1，既S向后移动1位开始匹配；j恢复到0，既subS从头开始匹配；</li>
+<li><code>k</code> i不变，既S从上一次匹配的位置开始匹配；j恢复到k，既subS从第k位开始匹配；</li>
+<li><code>0</code> i不变，既S从上一次匹配的位置开始匹配；j恢复到0，既subS从头开始匹配；</li>
+</ol>
+
+<h1 id="实例">实例</h1>
+
+<p><code>subS==&quot;ababa&quot;</code></p>
+
+<table>
+<thead>
+<tr>
+<th align="left">下标</th>
+<th align="center">0</th>
+<th align="center">1</th>
+<th align="center">2</th>
+<th align="center">3</th>
+<th align="center">4</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td align="left">subS</td>
+<td align="center">a</td>
+<td align="center">b</td>
+<td align="center">a</td>
+<td align="center">b</td>
+<td align="center">a</td>
+</tr>
+
+<tr>
+<td align="left">next</td>
+<td align="center">-1</td>
+<td align="center">0</td>
+<td align="center">-1</td>
+<td align="center">0</td>
+<td align="center">-1</td>
+</tr>
+
+<tr>
+<td align="left">满足公式</td>
+<td align="center">1</td>
+<td align="center">4</td>
+<td align="center">2</td>
+<td align="center">4</td>
+<td align="center">2</td>
+</tr>
+</tbody>
+</table>
+
+<p><code>subS==&quot;acaaaacabbbb&quot;</code></p>
+
+<table>
+<thead>
+<tr>
+<th align="left">下标</th>
+<th align="center">0</th>
+<th align="center">1</th>
+<th align="center">2</th>
+<th align="center">3</th>
+<th align="center">4</th>
+<th align="center">5</th>
+<th align="center">6</th>
+<th align="center">7</th>
+<th align="center">8</th>
+<th align="center">9</th>
+<th align="center">10</th>
+<th align="center">11</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td align="left">subS</td>
+<td align="center">a</td>
+<td align="center">c</td>
+<td align="center">a</td>
+<td align="center">a</td>
+<td align="center">a</td>
+<td align="center">a</td>
+<td align="center">c</td>
+<td align="center">a</td>
+<td align="center">b</td>
+<td align="center">b</td>
+<td align="center">b</td>
+<td align="center">b</td>
+</tr>
+
+<tr>
+<td align="left">next</td>
+<td align="center">-1</td>
+<td align="center">0</td>
+<td align="center">-1</td>
+<td align="center">1</td>
+<td align="center">1</td>
+<td align="center">1</td>
+<td align="center">0</td>
+<td align="center">-1</td>
+<td align="center">3</td>
+<td align="center">0</td>
+<td align="center">0</td>
+<td align="center">0</td>
+</tr>
+
+<tr>
+<td align="left">满足公式</td>
+<td align="center">1</td>
+<td align="center">4</td>
+<td align="center">2</td>
+<td align="center">3</td>
+<td align="center">3</td>
+<td align="center">3</td>
+<td align="center">4</td>
+<td align="center">2</td>
+<td align="center">3</td>
+<td align="center">4</td>
+<td align="center">4</td>
+<td align="center">4</td>
+</tr>
+</tbody>
+</table>
+
+<h1 id="代码实现">代码实现</h1>
+<div class="highlight"><pre class="chroma"><code class="language-go" data-lang="go"><span class="kn">package</span> <span class="nx">KMP</span>
+
+<span class="kd">type</span> <span class="nx">Kmp</span> <span class="kd">struct</span> <span class="p">{</span>
+	<span class="nx">subS</span> <span class="kt">string</span>
+	<span class="nx">next</span> <span class="p">[]</span><span class="kt">int</span>
+<span class="p">}</span>
+
+<span class="kd">func</span> <span class="nx">New</span><span class="p">(</span><span class="nx">subS</span> <span class="kt">string</span><span class="p">)</span> <span class="o">*</span><span class="nx">Kmp</span> <span class="p">{</span>
+	<span class="nx">kmp</span> <span class="o">:=</span> <span class="o">&amp;</span><span class="nx">Kmp</span><span class="p">{</span>
+		<span class="nx">subS</span><span class="p">:</span> <span class="nx">subS</span><span class="p">,</span>
+	<span class="p">}</span>
+	<span class="nx">kmp</span><span class="p">.</span><span class="nx">next</span> <span class="p">=</span> <span class="nb">make</span><span class="p">([]</span><span class="kt">int</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="nx">subS</span><span class="p">))</span>
+	<span class="nx">kmp</span><span class="p">.</span><span class="nx">getNext</span><span class="p">()</span>
+	<span class="k">return</span> <span class="nx">kmp</span>
+<span class="p">}</span>
+
+<span class="c1">//get next rule
+</span><span class="c1"></span><span class="kd">func</span> <span class="p">(</span><span class="nx">kmp</span> <span class="o">*</span><span class="nx">Kmp</span><span class="p">)</span> <span class="nx">getNext</span><span class="p">()</span> <span class="p">{</span>
+	<span class="nx">j</span> <span class="o">:=</span> <span class="mi">0</span>
+	<span class="nx">k</span> <span class="o">:=</span> <span class="o">-</span><span class="mi">1</span>
+	<span class="nx">kmp</span><span class="p">.</span><span class="nx">next</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="p">=</span> <span class="o">-</span><span class="mi">1</span>
+	<span class="nx">subSLen</span> <span class="o">:=</span> <span class="nb">len</span><span class="p">(</span><span class="nx">kmp</span><span class="p">.</span><span class="nx">subS</span><span class="p">)</span>
+	<span class="k">for</span> <span class="nx">j</span> <span class="p">&lt;</span> <span class="nx">subSLen</span><span class="o">-</span><span class="mi">1</span> <span class="p">{</span>
+		<span class="k">if</span> <span class="nx">k</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span> <span class="o">||</span> <span class="nx">kmp</span><span class="p">.</span><span class="nx">subS</span><span class="p">[</span><span class="nx">j</span><span class="p">]</span> <span class="o">==</span> <span class="nx">kmp</span><span class="p">.</span><span class="nx">subS</span><span class="p">[</span><span class="nx">k</span><span class="p">]</span> <span class="p">{</span>
+			<span class="nx">j</span> <span class="o">+=</span> <span class="mi">1</span>
+			<span class="nx">k</span> <span class="o">+=</span> <span class="mi">1</span>
+			<span class="k">if</span> <span class="nx">kmp</span><span class="p">.</span><span class="nx">subS</span><span class="p">[</span><span class="nx">j</span><span class="p">]</span> <span class="o">!=</span> <span class="nx">kmp</span><span class="p">.</span><span class="nx">subS</span><span class="p">[</span><span class="nx">k</span><span class="p">]</span> <span class="p">{</span>
+				<span class="nx">kmp</span><span class="p">.</span><span class="nx">next</span><span class="p">[</span><span class="nx">j</span><span class="p">]</span> <span class="p">=</span> <span class="nx">k</span>
+			<span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+				<span class="nx">kmp</span><span class="p">.</span><span class="nx">next</span><span class="p">[</span><span class="nx">j</span><span class="p">]</span> <span class="p">=</span> <span class="nx">kmp</span><span class="p">.</span><span class="nx">next</span><span class="p">[</span><span class="nx">k</span><span class="p">]</span>
+			<span class="p">}</span>
+		<span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+			<span class="nx">k</span> <span class="p">=</span> <span class="nx">kmp</span><span class="p">.</span><span class="nx">next</span><span class="p">[</span><span class="nx">k</span><span class="p">]</span>
+		<span class="p">}</span>
+	<span class="p">}</span>
+<span class="p">}</span>
+
+<span class="kd">func</span> <span class="p">(</span><span class="nx">kmp</span> <span class="o">*</span><span class="nx">Kmp</span><span class="p">)</span> <span class="nx">KmpContains</span><span class="p">(</span><span class="nx">s</span> <span class="kt">string</span><span class="p">)</span> <span class="kt">bool</span> <span class="p">{</span>
+	<span class="k">return</span> <span class="nx">kmp</span><span class="p">.</span><span class="nx">KmpGetIndex</span><span class="p">(</span><span class="nx">s</span><span class="p">)</span> <span class="p">&gt;</span> <span class="o">-</span><span class="mi">1</span>
+<span class="p">}</span>
+
+<span class="c1">// kmp search
+</span><span class="c1"></span><span class="kd">func</span> <span class="p">(</span><span class="nx">kmp</span> <span class="o">*</span><span class="nx">Kmp</span><span class="p">)</span> <span class="nx">KmpGetIndex</span><span class="p">(</span><span class="nx">s</span> <span class="kt">string</span><span class="p">)</span> <span class="kt">int</span> <span class="p">{</span>
+	<span class="nx">sLen</span> <span class="o">:=</span> <span class="nb">len</span><span class="p">(</span><span class="nx">s</span><span class="p">)</span>
+	<span class="nx">subSLen</span> <span class="o">:=</span> <span class="nb">len</span><span class="p">(</span><span class="nx">kmp</span><span class="p">.</span><span class="nx">subS</span><span class="p">)</span>
+	<span class="nx">index</span> <span class="o">:=</span> <span class="mi">0</span>
+	<span class="nx">i</span> <span class="o">:=</span> <span class="mi">0</span>
+	<span class="nx">j</span> <span class="o">:=</span> <span class="mi">0</span>
+	<span class="k">for</span> <span class="nx">i</span> <span class="p">&lt;</span> <span class="nx">sLen</span> <span class="o">&amp;&amp;</span> <span class="nx">j</span> <span class="p">&lt;</span> <span class="nx">subSLen</span> <span class="p">{</span>
+		<span class="k">if</span> <span class="nx">s</span><span class="p">[</span><span class="nx">i</span><span class="p">]</span> <span class="o">==</span> <span class="nx">kmp</span><span class="p">.</span><span class="nx">subS</span><span class="p">[</span><span class="nx">j</span><span class="p">]</span> <span class="p">{</span>
+			<span class="nx">i</span> <span class="o">+=</span> <span class="mi">1</span>
+			<span class="nx">j</span> <span class="o">+=</span> <span class="mi">1</span>
+		<span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+			<span class="nx">index</span> <span class="o">+=</span> <span class="nx">j</span> <span class="o">-</span> <span class="nx">kmp</span><span class="p">.</span><span class="nx">next</span><span class="p">[</span><span class="nx">j</span><span class="p">]</span>
+			<span class="k">if</span> <span class="nx">kmp</span><span class="p">.</span><span class="nx">next</span><span class="p">[</span><span class="nx">j</span><span class="p">]</span> <span class="o">!=</span> <span class="o">-</span><span class="mi">1</span> <span class="p">{</span>
+				<span class="nx">j</span> <span class="p">=</span> <span class="nx">kmp</span><span class="p">.</span><span class="nx">next</span><span class="p">[</span><span class="nx">j</span><span class="p">]</span>
+			<span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+				<span class="nx">j</span> <span class="p">=</span> <span class="mi">0</span>
+				<span class="nx">i</span> <span class="o">+=</span> <span class="mi">1</span>
+			<span class="p">}</span>
+		<span class="p">}</span>
+	<span class="p">}</span>
+	<span class="k">if</span> <span class="nx">j</span> <span class="o">==</span> <span class="nx">subSLen</span> <span class="p">{</span>
+		<span class="k">return</span> <span class="nx">index</span>
+	<span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+		<span class="k">return</span> <span class="o">-</span><span class="mi">1</span>
+	<span class="p">}</span>
+
+<span class="p">}</span></code></pre></div>
+      </article>
+
+      
+        <ul class="pager blog-pager">
+          
+            <li class="previous">
+              <a href="https://qietingfengling.github.io/post/go_context/" data-toggle="tooltip" data-placement="top" title="Golang中context包源码剖析">&larr; Previous Post</a>
+            </li>
+          
+          
+        </ul>
+      
+
+
+      
+        
+        
+      
+
+    </div>
+  </div>
+</div>
+
+    <footer>
+  <div class="container">
+    <div class="row">
+      <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+        <ul class="list-inline text-center footer-links">
+          
+              <li>
+                <a href="mailto:1181308789@qq.com" title="Email me">
+                  <span class="fa-stack fa-lg">
+                    <i class="fa fa-circle fa-stack-2x"></i>
+                    <i class="fa fa-envelope fa-stack-1x fa-inverse"></i>
+                  </span>
+                </a>
+              </li>
+              <li>
+                <a href="https://github.com/qietingfengling" title="GitHub">
+                  <span class="fa-stack fa-lg">
+                    <i class="fa fa-circle fa-stack-2x"></i>
+                    <i class="fa fa-github fa-stack-1x fa-inverse"></i>
+                  </span>
+                </a>
+              </li>
+          
+          <li>
+            
+            <a href="https://qietingfengling.github.io/index.xml" title="RSS">
+            
+              <span class="fa-stack fa-lg">
+                <i class="fa fa-circle fa-stack-2x"></i>
+                <i class="fa fa-rss fa-stack-1x fa-inverse"></i>
+              </span>
+            </a>
+          </li>
+          
+        </ul>
+        <p class="credits copyright text-muted">
+          
+            
+              <a href="yourwebsite.com">yingfeng.chen</a>
+            
+          
+
+          &nbsp;&bull;&nbsp;
+          2018
+
+          
+            &nbsp;&bull;&nbsp;
+            <a href="https://qietingfengling.github.io">Listen Wind</a>
+          
+        </p>
+        
+        <p class="credits theme-by text-muted">
+          <a href="http://gohugo.io">Hugo v0.36.1</a> powered &nbsp;&bull;&nbsp; Theme by <a href="http://deanattali.com/beautiful-jekyll/">Beautiful Jekyll</a> adapted to <a href="https://github.com/qietingfengling/beautifulhugo">Beautiful Hugo</a>
+          
+        </p>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.7.1/katex.min.js" integrity="sha384-/y1Nn9+QQAipbNQWU65krzJralCnuOasHncUFXGkdwntGeSvQicrYkiUBwsgUqc1" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.7.1/contrib/auto-render.min.js" integrity="sha384-dq1/gEHSxPZQ7DdrM82ID4YVol9BYyU7GbWlIwnwyPzotpoc57wDw/guX8EaYGPx" crossorigin="anonymous"></script>
+<script src="https://code.jquery.com/jquery-1.12.4.min.js" integrity="sha256-ZosEbRLbNQzLpnKIkEdrPv7lOy9C27hHQ+Xp8a4MxAQ=" crossorigin="anonymous"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+<script src="https://qietingfengling.github.io/js/main.js"></script><script> renderMathInElement(document.body); </script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/photoswipe/4.1.2/photoswipe.min.js" integrity="sha384-QELNnmcmU8IR9ZAykt67vGr9/rZJdHbiWi64V88fCPaOohUlHCqUD/unNN0BXSqy" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/photoswipe/4.1.2/photoswipe-ui-default.min.js" integrity="sha384-m67o7SkQ1ALzKZIFh4CiTA8tmadaujiTa9Vu+nqPSwDOqHrDmxLezTdFln8077+q" crossorigin="anonymous"></script>
+<script src="https://qietingfengling.github.io/js/load-photoswipe.js"></script>
+
+
+
+
+
+
+  </body>
+</html>
+
