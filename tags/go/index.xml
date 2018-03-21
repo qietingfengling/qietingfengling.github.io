@@ -18,7 +18,7 @@
       <pubDate>Wed, 21 Mar 2018 09:32:45 +0800</pubDate>
       <author>1181308789@qq.com (yingfeng.chen)</author>
       <guid>https://qietingfengling.github.io/post/algorithm_kmp/</guid>
-      <description>背景 冲者名字来研究的算法
+      <description>背景 冲着KMP名字来研究的算法
 使用场景 在一个长字符串中定位一个子字符串的高效算法
 变量定义 S:原字符串；
 subS:待定位子字符串;
