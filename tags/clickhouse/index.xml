@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Clickhouse on Listen Wind</title>
+    <link>https://qietingfengling.github.io/tags/clickhouse/</link>
+    <description>Recent content in Clickhouse on Listen Wind</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <managingEditor>1181308789@qq.com (yingfeng.chen)</managingEditor>
+    <webMaster>1181308789@qq.com (yingfeng.chen)</webMaster>
+    <lastBuildDate>Sun, 24 Jun 2018 13:09:24 +0800</lastBuildDate>
+    
+	<atom:link href="https://qietingfengling.github.io/tags/clickhouse/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>clickhouse入门和高可用搭建</title>
+      <link>https://qietingfengling.github.io/post/clickhouse_install/</link>
+      <pubDate>Sun, 24 Jun 2018 13:09:24 +0800</pubDate>
+      <author>1181308789@qq.com (yingfeng.chen)</author>
+      <guid>https://qietingfengling.github.io/post/clickhouse_install/</guid>
+      <description>前言 clickhouse曾一度支撑着上家公司全球网络监控的落体，其数据量达到20亿+/天，在多维度数据可视化展示、多维度数据分析和多维度数据告警表现优异， 秒杀同时期公司用的其他数据库。多数无益，在这个数据说话的时代，先上一份官网提供的测试数据。 接下来，本文从clickhouse的基础入门、高可用架构搭建和数据多机房迁移方案入手，介绍一下clickhouse，如有说错，欢迎批评指出，一起进步。
+clickhouse高可用集群搭建 CentOS下rpm包下载 clichhouse官方提供了多种安装方式，包括Ubuntu下apt-get安装、源码安装、Docker安装等，本文只介绍CentOS下rpm安装，其他方式本人比较懒， 等需要用到再补充哈。官方提供的rpm包下载链接如下图：
+截至本博客写的时间，rpm包版本更新到1.1.54362版本, packagecloud.io更新的rpm包比repo.red-soft.biz的1.1.54236版本更新， 主要特点是可支持按天来做分区。下载
+clickhouse-client-1.1.54362-1.el7.x86_64.rpm
+clickhouse-debuginfo-1.1.54362-1.el7.x86_64.rpm
+clickhouse-server-1.1.54362-1.el7.x86_64.rpm
+clickhouse-server-common-1.1.54362-1.el7.x86_64.rpm
+clickhouse-test-1.1.54362-1.el7.x86_64.rpm
+一键下载脚本如下：
+wget --content-disposition https://packagecloud.io/Altinity/clickhouse/packages/el/7/clickhouse-client-1.1.54362-1.el7.x86_64.rpm/download.rpm wget --content-disposition https://packagecloud.io/Altinity/clickhouse/packages/el/7/clickhouse-debuginfo-1.1.54362-1.el7.x86_64.rpm/download.rpm wget --content-disposition https://packagecloud.io/Altinity/clickhouse/packages/el/7/clickhouse-server-1.1.54362-1.el7.x86_64.rpm/download.rpm wget --content-disposition https://packagecloud.io/Altinity/clickhouse/packages/el/7/clickhouse-server-common-1.1.54362-1.el7.x86_64.rpm/download.rpm wget --content-disposition https://packagecloud.io/Altinity/clickhouse/packages/el/7/clickhouse-test-1.1.54362-1.el7.x86_64.rpm/download.rpm 下载完这五个rpm包，即可开始我们的搭建工作了。
+安装依赖包 clickhouse所需要的依赖包非常非常少，命令如下：
+yum -y install libicu-devel unixODBC libtool-ltdl 安装clickhouse的rpm包 yum -y install libicu-devel unixODBC libtool-ltdl 修改启动脚本 如果想根据自己需要指定clickhouse的data、log的路径，需要做这一步操作
+# 默认配置文件位置 root@localhost.localdomain:/ # ls /etc/clickhouse-server config-preprocessed.xml config.xml server-test.xml users-preprocessed.xml users.xml # 上述文件定义了默认数据目录，临时目录位置，日志目录 /var/lib/clickhouse /var/lib/clickhouse/tmp/ /var/log/clickhouse-server # 默认启动脚本，注意，这个名字虽然叫server，其实是个shell脚本 /etc/rc.d/init.d/clickhouse-server root@localhost.</description>
+    </item>
+    
+  </channel>
+</rss>

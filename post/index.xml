@@ -7,10 +7,43 @@
     <generator>Hugo -- gohugo.io</generator>
     <managingEditor>1181308789@qq.com (yingfeng.chen)</managingEditor>
     <webMaster>1181308789@qq.com (yingfeng.chen)</webMaster>
-    <lastBuildDate>Wed, 21 Mar 2018 09:32:45 +0800</lastBuildDate>
+    <lastBuildDate>Sun, 24 Jun 2018 13:09:24 +0800</lastBuildDate>
     
 	<atom:link href="https://qietingfengling.github.io/post/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>clickhouse入门和高可用搭建</title>
+      <link>https://qietingfengling.github.io/post/clickhouse_install/</link>
+      <pubDate>Sun, 24 Jun 2018 13:09:24 +0800</pubDate>
+      <author>1181308789@qq.com (yingfeng.chen)</author>
+      <guid>https://qietingfengling.github.io/post/clickhouse_install/</guid>
+      <description>前言 clickhouse曾一度支撑着上家公司全球网络监控的落体，其数据量达到20亿+/天，在多维度数据可视化展示、多维度数据分析和多维度数据告警表现优异， 秒杀同时期公司用的其他数据库。多数无益，在这个数据说话的时代，先上一份官网提供的测试数据。 接下来，本文从clickhouse的基础入门、高可用架构搭建和数据多机房迁移方案入手，介绍一下clickhouse，如有说错，欢迎批评指出，一起进步。
+clickhouse高可用集群搭建 CentOS下rpm包下载 clichhouse官方提供了多种安装方式，包括Ubuntu下apt-get安装、源码安装、Docker安装等，本文只介绍CentOS下rpm安装，其他方式本人比较懒， 等需要用到再补充哈。官方提供的rpm包下载链接如下图：
+截至本博客写的时间，rpm包版本更新到1.1.54362版本, packagecloud.io更新的rpm包比repo.red-soft.biz的1.1.54236版本更新， 主要特点是可支持按天来做分区。下载
+clickhouse-client-1.1.54362-1.el7.x86_64.rpm
+clickhouse-debuginfo-1.1.54362-1.el7.x86_64.rpm
+clickhouse-server-1.1.54362-1.el7.x86_64.rpm
+clickhouse-server-common-1.1.54362-1.el7.x86_64.rpm
+clickhouse-test-1.1.54362-1.el7.x86_64.rpm
+一键下载脚本如下：
+wget --content-disposition https://packagecloud.io/Altinity/clickhouse/packages/el/7/clickhouse-client-1.1.54362-1.el7.x86_64.rpm/download.rpm wget --content-disposition https://packagecloud.io/Altinity/clickhouse/packages/el/7/clickhouse-debuginfo-1.1.54362-1.el7.x86_64.rpm/download.rpm wget --content-disposition https://packagecloud.io/Altinity/clickhouse/packages/el/7/clickhouse-server-1.1.54362-1.el7.x86_64.rpm/download.rpm wget --content-disposition https://packagecloud.io/Altinity/clickhouse/packages/el/7/clickhouse-server-common-1.1.54362-1.el7.x86_64.rpm/download.rpm wget --content-disposition https://packagecloud.io/Altinity/clickhouse/packages/el/7/clickhouse-test-1.1.54362-1.el7.x86_64.rpm/download.rpm 下载完这五个rpm包，即可开始我们的搭建工作了。
+安装依赖包 clickhouse所需要的依赖包非常非常少，命令如下：
+yum -y install libicu-devel unixODBC libtool-ltdl 安装clickhouse的rpm包 yum -y install libicu-devel unixODBC libtool-ltdl 修改启动脚本 如果想根据自己需要指定clickhouse的data、log的路径，需要做这一步操作
+# 默认配置文件位置 root@localhost.localdomain:/ # ls /etc/clickhouse-server config-preprocessed.xml config.xml server-test.xml users-preprocessed.xml users.xml # 上述文件定义了默认数据目录，临时目录位置，日志目录 /var/lib/clickhouse /var/lib/clickhouse/tmp/ /var/log/clickhouse-server # 默认启动脚本，注意，这个名字虽然叫server，其实是个shell脚本 /etc/rc.d/init.d/clickhouse-server root@localhost.</description>
+    </item>
+    
+    <item>
+      <title>Go中更快的Channels</title>
+      <link>https://qietingfengling.github.io/post/go_faster_channels/</link>
+      <pubDate>Tue, 24 Apr 2018 10:24:47 +0800</pubDate>
+      <author>1181308789@qq.com (yingfeng.chen)</author>
+      <guid>https://qietingfengling.github.io/post/go_faster_channels/</guid>
+      <description>简介 Go语言中的Channels是在go开发中用来构建并发的常用方法。GO中的channel的api是以CSP（Communicating sequential processes）描述的方式 来支持编程。关于CSP，可以参考Hoare 1978论文，Donovan and Kernighan在2015也讲述过CSP与Go的关系， 详细描述请查看https://godoc.org/github.com/thomas11/csp。 Go中的Channels具有固定的缓存区大小b， 这使得只有b个发送者可以在没有将值传递给相应的接收者的情况下就可以返回。下面是一段发送和接收操作的 伪代码。我们的重点是发送和接收，这里没有涉及到select或者close。close添加起来也很方便，select可以 通过接收者使用等待机制的形式来实现。虽然这添加起来并不困难，但是和WaitGroup的实现相比会降低速度。
+发送者伪代码
+send(c: chan T, item: T) atomically do: if the buffer is full block append an item to the buffer if there were any receivers blocked wake the first one up 接收者伪代码
+receive(c: chan T) -&amp;gt; T atomically do: begin: if there are items in the buffer result = head of buffer advance the buffer head if there are any senders waiting wake the first sender up return result if the buffer is empty block goto begin Go的channels目前要求goroutines在执行对channels的操作前需要申请一个锁。 这使得对这个锁的竞争成为可扩展性的瓶颈；尽管获取这个锁的速度非常快，但是这也意味 着每次只有一个线程可以对队列进行操作。该论文描述一种新型的channel算法实现， 允许不同发送者和接受着并行完成操作。</description>
+    </item>
     
     <item>
       <title>深入理解KMP字符串模式匹配算法</title>

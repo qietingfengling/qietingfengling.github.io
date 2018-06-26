@@ -3,6 +3,16 @@
   xmlns:xhtml="http://www.w3.org/1999/xhtml">
   
   <url>
+    <loc>https://qietingfengling.github.io/post/clickhouse_install/</loc>
+    <lastmod>2018-06-24T13:09:24+08:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://qietingfengling.github.io/post/go_faster_channels/</loc>
+    <lastmod>2018-04-24T10:24:47+08:00</lastmod>
+  </url>
+  
+  <url>
     <loc>https://qietingfengling.github.io/post/algorithm_kmp/</loc>
     <lastmod>2018-03-21T09:32:45+08:00</lastmod>
   </url>
@@ -19,7 +29,7 @@
   
   <url>
     <loc>https://qietingfengling.github.io/</loc>
-    <lastmod>2018-03-21T09:32:45+08:00</lastmod>
+    <lastmod>2018-06-24T13:09:24+08:00</lastmod>
   </url>
   
   <url>
@@ -38,8 +48,14 @@
   </url>
   
   <url>
+    <loc>https://qietingfengling.github.io/tags/clickhouse/</loc>
+    <lastmod>2018-06-24T13:09:24+08:00</lastmod>
+    <priority>0</priority>
+  </url>
+  
+  <url>
     <loc>https://qietingfengling.github.io/tags/go/</loc>
-    <lastmod>2018-03-21T09:32:45+08:00</lastmod>
+    <lastmod>2018-04-24T10:24:47+08:00</lastmod>
     <priority>0</priority>
   </url>
   
@@ -50,7 +66,7 @@
   
   <url>
     <loc>https://qietingfengling.github.io/post/</loc>
-    <lastmod>2018-03-21T09:32:45+08:00</lastmod>
+    <lastmod>2018-06-24T13:09:24+08:00</lastmod>
     <priority>0</priority>
   </url>
   

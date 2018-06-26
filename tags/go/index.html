@@ -179,6 +179,40 @@ ga('send', 'pageview');
         <div class="posts-list">
           
             <article class="post-preview">
+              <a href="https://qietingfengling.github.io/post/go_faster_channels/">
+                <h2 class="post-title">Go中更快的Channels</h2>
+
+                
+                  <h3 class="post-subtitle">
+                    使用非阻塞数据结构的技术来改进阻塞的Channels
+                  </h3>
+                
+              </a>
+
+              <p class="post-meta">
+                Posted on April 24, 2018
+              </p>
+              <div class="post-entry">
+                
+                  简介 Go语言中的Channels是在go开发中用来构建并发的常用方法。GO中的channel的api是以CSP（Communicating sequential processes）描述的方式 来支持编程。关于CSP，可以参考Hoare 1978论文，Donovan and Kernighan在2015也讲述过CSP与Go的关系， 详细描述请查看https://godoc.org/github.com/thomas11/csp。 Go中的Channels具有固定的缓存区大小b， 这使得只有b个发送者可以在没有将值传递给相应的接收者的情况下就可以返回。下面是一段发送和接收操作的 伪代码。我们的重点是发送和接收，这里没有涉及到select或者close。close添加起来也很方便，select可以 通过接收者使用等待机制的形式来实现。虽然这添加起来并不困难，但是和WaitGroup的实现相比会降低速度。
+发送者伪代码
+send(c: chan T, item: T) atomically do: if the buffer is full block append an item to the buffer if there were any receivers blocked wake the first one up 接收者伪代码
+receive(c: chan T) -&gt; T atomically do: begin: if there are items in the buffer result = head of buffer advance the buffer head if there are any senders waiting wake the first sender up return result if the buffer is empty block goto begin Go的channels目前要求goroutines在执行对channels的操作前需要申请一个锁。 这使得对这个锁的竞争成为可扩展性的瓶颈；尽管获取这个锁的速度非常快，但是这也意味 着每次只有一个线程可以对队列进行操作。该论文描述一种新型的channel算法实现， 允许不同发送者和接受着并行完成操作。
+                  <a href="https://qietingfengling.github.io/post/go_faster_channels/" class="post-read-more">[Read More]</a>
+                
+              </div>
+
+              
+                <span class="post-meta">
+                  
+                    #<a href="https://qietingfengling.github.io/tags/go/">go</a>&nbsp;
+                  
+                </span>
+              
+
+            </article>
+          
+            <article class="post-preview">
               <a href="https://qietingfengling.github.io/post/algorithm_kmp/">
                 <h2 class="post-title">深入理解KMP字符串模式匹配算法</h2>
 
