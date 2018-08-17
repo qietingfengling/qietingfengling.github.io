@@ -206,6 +206,49 @@ ga('send', 'pageview');
           
           
             <article class="post-preview">
+              <a href="https://qietingfengling.github.io/post/go_debugging_memory_leaks/">
+                <h2 class="post-title">SRE：调试Go中的简单内存泄漏</h2>
+                
+                
+              </a>
+
+              <span class="post-meta">
+  
+  
+  <i class="fa fa-calendar-o"></i>&nbsp;Posted on August 13, 2018
+  
+  
+  
+</span>
+
+
+              <div class="post-entry">
+                
+                  前言 内存泄露是属于一类bug，表现在应用程序对于不在使用的内存没有进行释放。这类bug通常是明确的， 高度可见的，使得他们成为开始学习调试的理想选择。Go具有功能强大的工具链，是一种特别适合识别 内存泄露的语言。该工具链（pprof）具有让人惊讶的功能，可以轻松定位内存的使用情况。
+什么是内存泄露 如果内存无限制地增长而且用于无法达到稳定的状态，则可能存在泄露。这里的关键是内存增长而无法 达到稳定的状态，并最终出现crashes或者影响系统性能而导致问题出现。
+内存泄露可能由于多种原因而发生。可以因为数据结构体无限制增长的逻辑泄露，可能因为不良对象引用 处理的复杂性，或者仅仅又由于任何其他原因。无论来源如何，许多内存泄露在数据可视化的展示都会有 锯齿的展示。
+调试过程 本篇博客重点是探索如何识别和查明内存泄露的根本原因。我们将主要关注内存泄露的特征，如何识别它们 和如何使用go来识别其根本原因。因此，我们的实际调试过程将是相对肤浅和非正式的。
+我们分析的目标是通过不断排除可能性来达到逐步缩小问题的范围，直到我们有足够的信息来形成和提出假设。 在我们有足够的数据和原因范围后，我们应该形成假设然后尝试用数据验证假设的正确性。
+每一个步骤都是在为了尝试查明问题的原因或者验证假设无效。再次过程我们将形成一系列假设，他们必须 首先是通用的，然后是逐步更具体的。这基于科学的方法。
+重新申明我们解决问题的思路：
+ 提出一个问题 形成一个假设 分析这个假设 重复直到找到根本原因  鉴定 我们怎么知道否时内存泄露呢？最直接的指标是显示errors。对于内存泄露，常见的错误是OOM错误或显示 系统崩溃
+OOM错误 errors是问题的最明确指标。如果逻辑是闭合的，用户自己生成的errors可能产生误报。OOM是操作系统 字面上表明一些东西使用过多的内存。在下面的错误中，表示达到cgroup限制并且容器被kill。
+dmesg
+[14808.063890] main invoked oom-killer: gfp_mask=0x24000c0, order=0, oom_score_adj=0 [7/972] [14808.063893] main cpuset=34186d9bd07706222bd427bb647ceed81e8e108eb653ff73c7137099fca1cab6 mems_allowed=0 [14808.063899] CPU: 2 PID: 11345 Comm: main Not tainted 4.4.0-130-generic #156-Ubuntu [14808.063901] Hardware name: innotek GmbH VirtualBox/VirtualBox, BIOS VirtualBox 12/01/2006 [14808.063902] 0000000000000286 ac45344c9134371f ffff8800b8727c88 ffffffff81401c43 [14808.063906] ffff8800b8727d68 ffff8800b87a5400 ffff8800b8727cf8 ffffffff81211a1e [14808.
+                  <a href="https://qietingfengling.github.io/post/go_debugging_memory_leaks/" class="post-read-more">[Read More]</a>
+                
+              </div>
+
+              
+                <span class="post-meta">
+                
+                  #<a href="https://qietingfengling.github.io/tags/go/">go</a>&nbsp;
+                
+                </span>
+              
+            </article>
+          
+            <article class="post-preview">
               <a href="https://qietingfengling.github.io/post/clickhouse_install/">
                 <h2 class="post-title">clickhouse入门和高可用搭建</h2>
                 
