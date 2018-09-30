@@ -7,10 +7,20 @@
     <generator>Hugo -- gohugo.io</generator>
     <managingEditor>1181308789@qq.com (yingfeng.chen)</managingEditor>
     <webMaster>1181308789@qq.com (yingfeng.chen)</webMaster>
-    <lastBuildDate>Mon, 13 Aug 2018 09:01:01 +0800</lastBuildDate>
+    <lastBuildDate>Sun, 30 Sep 2018 15:19:18 +0800</lastBuildDate>
     
 	<atom:link href="https://qietingfengling.github.io/post/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>Golang字符串操作优化思路</title>
+      <link>https://qietingfengling.github.io/post/flip_game_go_string_operat_optimize/</link>
+      <pubDate>Sun, 30 Sep 2018 15:19:18 +0800</pubDate>
+      <author>1181308789@qq.com (yingfeng.chen)</author>
+      <guid>https://qietingfengling.github.io/post/flip_game_go_string_operat_optimize/</guid>
+      <description>题目 Description You are playing the following Flip Game with your friend: Given a string that contains only these two characters: + and -, you and your friend take turns to flip two consecutive &amp;ldquo;++&amp;rdquo; into &amp;ldquo;&amp;ndash;&amp;rdquo;. The game ends when a person can no longer make a move and therefore the other person will be the winner.
+Write a function to compute all possible states of the string after one valid move.</description>
+    </item>
     
     <item>
       <title>SRE：调试Go中的简单内存泄漏</title>

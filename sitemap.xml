@@ -3,6 +3,11 @@
   xmlns:xhtml="http://www.w3.org/1999/xhtml">
   
   <url>
+    <loc>https://qietingfengling.github.io/post/flip_game_go_string_operat_optimize/</loc>
+    <lastmod>2018-09-30T15:19:18+08:00</lastmod>
+  </url>
+  
+  <url>
     <loc>https://qietingfengling.github.io/post/go_debugging_memory_leaks/</loc>
     <lastmod>2018-08-13T09:01:01+08:00</lastmod>
   </url>
@@ -34,7 +39,7 @@
   
   <url>
     <loc>https://qietingfengling.github.io/</loc>
-    <lastmod>2018-08-13T09:01:01+08:00</lastmod>
+    <lastmod>2018-09-30T15:19:18+08:00</lastmod>
   </url>
   
   <url>
@@ -43,7 +48,7 @@
   
   <url>
     <loc>https://qietingfengling.github.io/tags/algorithm/</loc>
-    <lastmod>2018-03-21T09:32:45+08:00</lastmod>
+    <lastmod>2018-09-30T15:19:18+08:00</lastmod>
     <priority>0</priority>
   </url>
   
@@ -71,13 +76,13 @@
   
   <url>
     <loc>https://qietingfengling.github.io/post/</loc>
-    <lastmod>2018-08-13T09:01:01+08:00</lastmod>
+    <lastmod>2018-09-30T15:19:18+08:00</lastmod>
     <priority>0</priority>
   </url>
   
   <url>
     <loc>https://qietingfengling.github.io/tags/</loc>
-    <lastmod>2018-03-21T09:32:45+08:00</lastmod>
+    <lastmod>2018-09-30T15:19:18+08:00</lastmod>
     <priority>0</priority>
   </url>
   
